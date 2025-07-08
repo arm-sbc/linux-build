@@ -18,27 +18,27 @@ cd linux-build
 
 The script will guide you through selecting your board, SoC, kernel version, and desired build steps.
 
-✅ Features
-🧩 Interactive board selection for Rockchip and Allwinner
+## ✅ Features
 
-🛠️ Builds U-Boot, kernel, and optionally rootfs
+- 🌟 Interactive board selection for Rockchip and Allwinner
+- 🛠️ Builds U-Boot, kernel, and optionally rootfs
+- ⚙️ Applies patches and defconfigs automatically
+- 💾 Creates bootable SD/eMMC images
+- 🐧 Supports both legacy and mainline kernel options
+- 🖥️ Optional LXQt desktop setup with network auto-config
 
-⚙️ Applies patches and defconfigs automatically
+---
 
-💾 Creates bootable SD/eMMC images
+## 📦 Dependencies
 
-🐧 Supports both legacy and mainline kernel options
-
-🖥️ Optional LXQt desktop setup with network auto-config
-
-📦 Dependencies
 All required build tools and packages will be installed automatically.
 
 However, depending on your Linux distribution, you may need to install some packages manually, especially on non-Ubuntu systems.
 
-⚠️ We recommend using Ubuntu 22.04 or newer for best compatibility.
+> ⚠️ We recommend using **Ubuntu 22.04 or newer** for best compatibility.
 
-🆘 Support
+
+## 🆘 Support
 For any issues, feature requests, or integration help, please contact us:
 
 📧 support@arm-sbc.com

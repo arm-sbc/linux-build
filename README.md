@@ -13,7 +13,6 @@ This repository contains scripts to automate the process of compiling **U-Boot**
 ```bash
 git clone https://github.com/arm-sbc/linux-build.git
 cd linux-build
-chmod +x arm_build.sh
 ./arm_build.sh
 ```
 
@@ -30,10 +29,11 @@ The script will guide you through selecting your board, SoC, kernel version, and
 
 🐧 Supports both legacy and mainline kernel options
 
-🌐 Optional LXQt desktop setup with network auto-config
+🖥️ Optional LXQt desktop setup with network auto-config
 
 📦 Dependencies
 All required build tools and packages will be installed automatically.
+
 However, depending on your Linux distribution, you may need to install some packages manually, especially on non-Ubuntu systems.
 
 ⚠️ We recommend using Ubuntu 22.04 or newer for best compatibility.

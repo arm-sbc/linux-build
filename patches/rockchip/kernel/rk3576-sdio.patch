@@ -1,0 +1,27 @@
+diff --git a/arch/arm64/boot/dts/rockchip/rk3576.dtsi b/arch/arm64/boot/dts/rockchip/rk3576.dtsi
+index 1086482f04792325dc4c22fb8ceeb27eef59afe4..a09582470bb7f654b711308da1e51fa8571ca1e8 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3576.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk3576.dtsi
+@@ -1695,6 +1695,22 @@  sdmmc: mmc@2a310000 {
+ 			status = "disabled";
+ 		};
+ 
++		sdio: mmc@2a320000 {
++			compatible = "rockchip,rk3576-dw-mshc", "rockchip,rk3288-dw-mshc";
++			reg = <0x0 0x2a320000 0x0 0x4000>;
++			clocks = <&cru HCLK_SDIO>, <&cru CCLK_SRC_SDIO>;
++			clock-names = "biu", "ciu";
++			fifo-depth = <0x100>;
++			interrupts = <GIC_SPI 252 IRQ_TYPE_LEVEL_HIGH>;
++			max-frequency = <200000000>;
++			pinctrl-0 = <&sdmmc1m0_clk &sdmmc1m0_cmd &sdmmc1m0_bus4>;
++			pinctrl-names = "default";
++			power-domains = <&power RK3576_PD_SDGMAC>;
++			resets = <&cru SRST_H_SDIO>;
++			reset-names = "reset";
++			status = "disabled";
++		};
++
+ 		sdhci: mmc@2a330000 {
+ 			compatible = "rockchip,rk3576-dwcmshc", "rockchip,rk3588-dwcmshc";
+ 			reg = <0x0 0x2a330000 0x0 0x10000>;

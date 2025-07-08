@@ -1,0 +1,569 @@
+--- configs/armsbc-rwa-a64_defconfig	1970-01-01 04:00:00.000000000 +0400
++++ configs/armsbc-rwa-a64_defconfig	2025-01-14 17:26:47.458138470 +0400
+@@ -0,0 +1,22 @@
++CONFIG_ARM=y
++CONFIG_ARCH_SUNXI=y
++CONFIG_DEFAULT_DEVICE_TREE="sun50i-a64-armsbc-rwa"
++CONFIG_SPL=y
++CONFIG_MACH_SUN50I=y
++CONFIG_SUNXI_DRAM_LPDDR3_STOCK=y
++CONFIG_DRAM_CLK=552
++CONFIG_DRAM_ZQ=3881949
++CONFIG_MMC_SUNXI_SLOT_EXTRA=2
++CONFIG_SPL_SPI_SUNXI=y
++# CONFIG_SYS_MALLOC_CLEAR_ON_INIT is not set
++CONFIG_SUPPORT_EMMC_BOOT=y
++CONFIG_MTD=y
++CONFIG_SPI_FLASH_WINBOND=y
++CONFIG_SUN8I_EMAC=y
++CONFIG_SPI=y
++CONFIG_USB_EHCI_HCD=y
++CONFIG_USB_OHCI_HCD=y
++CONFIG_VIDEO_SUNXI=y
++CONFIG_VIDEO_HDMI=y
++
++
+
+--- arch/arm/dts/sun50i-a64-armsbc-rwa.dts	1970-01-01 04:00:00.000000000 +0400
++++ arch/arm/dts/sun50i-a64-armsbc-rwa.dts	2025-01-14 17:27:58.756838042 +0400
+@@ -0,0 +1,540 @@
++// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
++// Copyright (C) 2024 Subair Mullappilly <msubair@hotmail.com>
++
++/dts-v1/;
++
++#include "sun50i-a64.dtsi"
++#include "sun50i-a64-cpu-opp.dtsi"
++
++#include <dt-bindings/gpio/gpio.h>
++
++/ {
++	model = "ARM-SBC A64-RWA-026";
++	compatible = "armsbc,a64-rwa-026", "allwinner,sun50i-a64";
++
++	
++		aliases {
++		ethernet0 = &emac;
++		serial0 = &uart0;
++		serial1 = &uart1;
++	};
++
++	chosen {
++		stdout-path = "serial0:115200n8";
++	};
++	
++	backlight: backlight {
++		compatible = "pwm-backlight";
++		pwms = <&r_pwm 0 50000 1>;
++		brightness-levels = <0 16 18 20 22 24 26 29 32 35 38 42 46 51 56 62 68 75 83 91 100>;
++		default-brightness-level = <15>;
++		enable-gpios = <&r_pio 0 8 GPIO_ACTIVE_HIGH>; /* PL08 */
++		power-supply = <&vcc_backlight>;
++	};
++
++	vcc_lcd: vcc-lcd {
++		compatible = "regulator-fixed";
++		regulator-name = "vcc-lcd";
++		regulator-boot-on;
++		regulator-always-on;
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		gpio = <&r_pio 0 12 GPIO_ACTIVE_HIGH>; /* PL12 */
++		enable-active-high;
++	};
++	
++	vcc_backlight: vcc-backlight {
++		compatible = "regulator-fixed";
++		regulator-boot-on;
++		regulator-always-on;
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		regulator-name = "vcc-backlight";
++		gpio = <&r_pio 0 5 GPIO_ACTIVE_HIGH>; /* PL05 */
++		enable-active-high;
++	};
++
++	panel {
++		compatible = "arm-sbcl,a64-mx3-10inch", "panel-lvds";
++		backlight = <&backlight>;
++		status = "okay";
++		pinctrl-names = "default";
++		reset-gpios = <&r_pio 0 7 GPIO_ACTIVE_HIGH>; /* PL7 */
++		avdd3v3-supply = <&vcc_lcd>;
++        	width-mm = <222>;
++		height-mm = <125>;
++		output = "lvds";
++		data-mapping = "jeida-18";
++
++		panel-timing {
++                		clock-frequency = <72330000>;
++				hactive = <1366>;
++				vactive = <768>;
++				hsync-len = <60>;
++				hfront-porch = <80>;
++				hback-porch = <120>;
++				vfront-porch = <10>;
++				vback-porch = <12>;
++				vsync-len = <20>;
++            };
++
++                port {
++                        panel_input: endpoint {
++                                remote-endpoint = <&tcon0_out_lcd>;
++                        };
++                };
++	};
++
++	hdmi-connector {
++		compatible = "hdmi-connector";
++		type = "a";
++
++		port {
++			hdmi_con_in: endpoint {
++				remote-endpoint = <&hdmi_out_con>;
++			};
++		};
++	};
++
++	speaker_amp: audio-amplifier {
++		compatible = "simple-audio-amplifier";
++		enable-gpios = <&pio 4 16 GPIO_ACTIVE_HIGH>; /* PE16 */
++		sound-name-prefix = "Speaker Amp";
++	};
++
++	leds {
++		compatible = "gpio-leds";
++
++		led-0 {
++			label = "rw-led-a64:pwr";
++			gpios = <&pio 4 10 GPIO_ACTIVE_HIGH>; /* PE10 */
++			default-state = "on";
++		};
++	};
++
++	wifi_pwrseq: wifi_pwrseq {
++		compatible = "mmc-pwrseq-simple";
++		reset-gpios = <&pio 4 3 GPIO_ACTIVE_LOW>; /* PE3 */
++		clocks = <&rtc CLK_OSC32K_FANOUT>;
++		clock-names = "ext_clock";
++	};
++	
++	reg_4g_pwr: 4g-pwr {
++		compatible = "regulator-fixed";
++		regulator-name = "4g-pwr";
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++		regulator-boot-on;
++		enable-active-high;
++		gpio = <&pio 4 8 GPIO_ACTIVE_HIGH>;
++		status = "okay";
++
++	};
++
++	
++	reg_usbrst_vbus: usbrst-vbus {
++		compatible = "regulator-fixed";
++		regulator-name = "usbrst-vbus";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		regulator-boot-on;
++		regulator-always-on;
++		enable-active-high;
++		gpio = <&pio 4 9 GPIO_ACTIVE_HIGH>;
++		status = "okay";
++
++	};
++	
++	reg_usbhub_vbus: usbhub-vbus {
++		compatible = "regulator-fixed";
++		regulator-name = "usbhub-vbus";
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++		regulator-boot-on;
++		regulator-always-on;
++		enable-active-high;
++		gpio = <&pio 4 0 GPIO_ACTIVE_HIGH>;
++		status = "okay";
++
++	};
++
++	reg_usb1_vbus: usb1-vbus {
++		compatible = "regulator-fixed";
++		regulator-name = "usb1-vbus";
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++		regulator-boot-on;
++		enable-active-high;
++		gpio = <&pio 4 4 GPIO_ACTIVE_HIGH>;
++		status = "okay";
++
++	};
++
++};
++
++&codec {
++	status = "okay";
++};
++
++&codec_analog {
++	cpvdd-supply = <&reg_eldo1>;
++	status = "okay";
++};
++
++&cpu0 {
++	cpu-supply = <&reg_dcdc2>;
++};
++
++&cpu1 {
++	cpu-supply = <&reg_dcdc2>;
++};
++
++&cpu2 {
++	cpu-supply = <&reg_dcdc2>;
++};
++
++&cpu3 {
++	cpu-supply = <&reg_dcdc2>;
++};
++
++&de {
++	status = "okay";
++};
++
++&dphy {
++	status = "okay";
++};
++
++&ehci0 {
++	status = "okay";
++};
++
++&ehci1 {
++	status = "okay";
++};
++
++&ohci0 {
++	status = "okay";
++};
++
++&ohci1 {
++	status = "okay";
++};
++
++
++&pio {
++	vcc-pc-supply = <&reg_dcdc1>;
++	vcc-pg-supply = <&reg_aldo2>;
++};
++
++&emac {
++	pinctrl-names = "default";
++	pinctrl-0 = <&rgmii_pins>;
++	phy-mode = "rgmii-id";
++	phy-handle = <&ext_rgmii_phy>;
++	phy-supply = <&reg_dc1sw>;
++	status = "okay";
++};
++
++&mdio {
++	ext_rgmii_phy: ethernet-phy@1 {
++		compatible = "ethernet-phy-ieee802.3-c22";
++		reg = <1>;
++	};
++};
++
++&hdmi {
++	hvcc-supply = <&reg_dldo1>;
++	status = "okay";
++};
++
++&hdmi_out {
++	hdmi_out_con: endpoint {
++		remote-endpoint = <&hdmi_con_in>;
++	};
++};
++
++&i2c1 {
++	pinctrl-names = "default";
++ 	pinctrl-0 = <&i2c1_pins>;
++	status = "okay";
++};
++
++&mixer1 {
++	status = "okay";
++};
++
++&i2s0 {
++	status = "okay";
++};
++
++&i2s2 {
++	status = "okay";
++};
++
++
++&dai {
++	status = "okay";
++};
++
++&r_pwm {
++	status = "okay";
++};
++
++&mmc0 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&mmc0_pins>;
++	vmmc-supply = <&reg_dcdc1>;
++	cd-gpios = <&pio 5 6 GPIO_ACTIVE_LOW>;
++	disable-wp;
++	bus-width = <4>;
++	status = "okay";
++};
++
++&mmc1 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&mmc1_pins>;
++	vmmc-supply = <&reg_dldo2>;
++	vqmmc-supply = <&reg_dldo4>;
++	mmc-pwrseq = <&wifi_pwrseq>;
++	bus-width = <4>;
++	non-removable;
++	status = "okay";
++
++	rtl8723ds: wifi@1 {
++		reg = <1>;
++		interrupt-parent = <&pio>;
++		interrupts = <7 10 IRQ_TYPE_LEVEL_LOW>; /* PH10 */
++		interrupt-names = "host-wake";
++	};
++};
++
++&mmc2 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&mmc2_pins>, <&mmc2_ds_pin>;
++	vmmc-supply = <&reg_dcdc1>;
++	bus-width = <8>;
++	non-removable;
++	cap-mmc-hw-reset;
++	status = "okay";
++};
++
++&tcon0_out {
++        tcon0_out_lcd: endpoint {
++                remote-endpoint = <&panel_input>;
++        };
++};
++
++
++&mali {
++	status = "okay";
++	mali-supply = <&reg_dcdc6>;
++};
++
++&r_rsb {
++	status = "okay";
++
++	axp803: pmic@3a3 {
++		compatible = "x-powers,axp803";
++		reg = <0x3a3>;
++		interrupt-parent = <&r_intc>;
++		interrupts = <GIC_SPI 32 IRQ_TYPE_LEVEL_LOW>;
++		x-powers,drive-vbus-en; /* set N_VBUSEN as output pin */
++	};
++};
++
++#include "axp803.dtsi"
++
++&ac_power_supply {
++	status = "okay";
++};
++
++&battery_power_supply {
++	status = "okay";
++};
++
++&reg_aldo1 {
++	regulator-always-on;
++	regulator-min-microvolt = <3300000>;
++	regulator-max-microvolt = <3300000>;
++	regulator-name = "vcc-pe";
++};
++
++&reg_aldo2 {
++	regulator-always-on;
++	regulator-min-microvolt = <1800000>;
++	regulator-max-microvolt = <3300000>;
++	regulator-name = "vcc-pl";
++};
++
++&reg_aldo3 {
++	regulator-always-on;
++	regulator-min-microvolt = <3000000>;
++	regulator-max-microvolt = <3000000>;
++	regulator-name = "vcc-pll-avcc";
++};
++
++&reg_dc1sw {
++	regulator-always-on;
++	regulator-name = "vcc-kcd";
++};
++
++&reg_dcdc1 {
++	regulator-always-on;
++	regulator-min-microvolt = <3300000>;
++	regulator-max-microvolt = <3300000>;
++	regulator-name = "vcc-3v3";
++};
++
++&reg_dcdc2 {
++	regulator-always-on;
++	regulator-min-microvolt = <1040000>;
++	regulator-max-microvolt = <1300000>;
++	regulator-name = "vdd-cpux";
++};
++
++/* DCDC3 is polyphased with DCDC2 */
++
++&reg_dcdc5 {
++	regulator-always-on;
++	regulator-min-microvolt = <1500000>;
++	regulator-max-microvolt = <1500000>;
++	regulator-name = "vcc-dram";
++};
++
++&reg_dcdc6 {
++	regulator-always-on;
++	regulator-min-microvolt = <1100000>;
++	regulator-max-microvolt = <1100000>;
++	regulator-name = "vdd-sys";
++};
++
++&reg_dldo1 {
++	regulator-min-microvolt = <3300000>;
++	regulator-max-microvolt = <3300000>;
++	regulator-name = "vcc-hdmi";
++};
++
++&reg_dldo2 {
++	regulator-min-microvolt = <3300000>;
++	regulator-max-microvolt = <3300000>;
++	regulator-name = "vcc-usb-hub";
++};
++
++&reg_dldo3 {
++	regulator-min-microvolt = <3300000>;
++	regulator-max-microvolt = <3300000>;
++	regulator-name = "vcc-avdd-csi";
++};
++
++&reg_dldo4 {
++	regulator-min-microvolt = <1800000>;
++	regulator-max-microvolt = <3300000>;
++	regulator-name = "vcc-wifi-io";
++};
++
++&reg_drivevbus {
++	regulator-name = "usb0-vbus";
++	status = "okay";
++};
++
++&reg_eldo1 {
++	regulator-always-on;
++	regulator-min-microvolt = <1800000>;
++	regulator-max-microvolt = <1800000>;
++	regulator-name = "cpvdd";
++};
++
++&reg_fldo1 {
++	regulator-min-microvolt = <1200000>;
++	regulator-max-microvolt = <1200000>;
++	regulator-name = "vcc-1v2-hsic";
++};
++
++&reg_fldo2 {
++	regulator-always-on;
++	regulator-min-microvolt = <1100000>;
++	regulator-max-microvolt = <1100000>;
++	regulator-name = "vdd-cpus";
++};
++
++&reg_ldo_io0 {
++	regulator-name = "vcc-ctp";
++	status = "okay";
++	regulator-min-microvolt = <3300000>;
++	regulator-max-microvolt = <3300000>;
++};
++
++&usb_power_supply {
++	status = "okay";
++};
++
++&simplefb_hdmi {
++	vcc-hdmi-supply = <&reg_dldo1>;
++};
++
++&reg_rtc_ldo {
++	regulator-name = "vcc-rtc";
++};
++
++&sound {
++	status = "okay";
++	simple-audio-card,aux-devs = <&codec_analog>, <&speaker_amp>;
++	simple-audio-card,widgets = "Microphone", "Internal Microphone Left",
++				    "Microphone", "Internal Microphone Right",
++				    "Headphone", "Headphone Jack",
++				    "Speaker", "Internal Speaker";
++	simple-audio-card,routing =
++			"Left DAC", "DACL",
++			"Right DAC", "DACR",
++			"Speaker Amp INL", "LINEOUT",
++			"Speaker Amp INR", "LINEOUT",
++			"Internal Speaker", "Speaker Amp OUTL",
++			"Internal Speaker", "Speaker Amp OUTR",
++			"Headphone Jack", "HP",
++			"ADCL", "Left ADC",
++			"ADCR", "Right ADC",
++			"Internal Microphone Left", "MBIAS",
++			"MIC1", "Internal Microphone Left",
++			"Internal Microphone Right", "HBIAS",
++			"MIC2", "Internal Microphone Right";
++};
++&uart0 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&uart0_pb_pins>;
++	status = "okay";
++};
++
++&uart1 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&uart1_pins>, <&uart1_rts_cts_pins>;
++	uart-has-rtscts;
++	status = "okay";
++
++	bluetooth {
++		compatible = "realtek,rtl8723bs-bt";
++		clocks = <&rtc CLK_OSC32K_FANOUT>;
++		clock-names = "lpo";
++		vbat-supply = <&reg_dldo2>;
++		vddio-supply = <&reg_dldo4>;
++		device-wakeup-gpios = <&pio 7 11 GPIO_ACTIVE_HIGH>; /* PH11 */
++		host-wakeup-gpios = <&pio 4 1 GPIO_ACTIVE_HIGH>; /* PE1 */
++		shutdown-gpios = <&pio 4 2 GPIO_ACTIVE_HIGH>; /* PE2*/
++	};
++};
++
++&usb_otg {
++	dr_mode = "otg";
++	status = "okay";
++};
++
++&usb_power_supply {
++	status = "okay";
++};
++
++&usbphy {
++	usb0_id_det-gpios = <&pio 7 9 GPIO_ACTIVE_HIGH>; /* PH9 */
++	usb0_vbus-supply = <&reg_drivevbus>;
++	usb1_vbus-supply = <&reg_usb1_vbus>;
++	status = "okay";
++};

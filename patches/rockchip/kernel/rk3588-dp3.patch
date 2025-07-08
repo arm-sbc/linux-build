@@ -1,0 +1,14 @@
+--- a/drivers/gpu/drm/bridge/simple-bridge.c
++++ b/drivers/gpu/drm/bridge/simple-bridge.c
+@@ -261,6 +261,11 @@  static const struct of_device_id simple_bridge_match[] = {
+ 			.timings = &default_bridge_timings,
+ 			.connector_type = DRM_MODE_CONNECTOR_VGA,
+ 		},
++	}, {
++		.compatible = "radxa,ra620",
++		.data = &(const struct simple_bridge_info) {
++			.connector_type = DRM_MODE_CONNECTOR_HDMIA,
++		},
+ 	}, {
+ 		.compatible = "ti,opa362",
+ 		.data = &(const struct simple_bridge_info) {

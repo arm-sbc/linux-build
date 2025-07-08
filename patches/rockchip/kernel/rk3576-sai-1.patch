@@ -1,0 +1,19 @@
+diff --git a/include/dt-bindings/clock/rockchip,rk3576-cru.h b/include/dt-bindings/clock/rockchip,rk3576-cru.h
+index f576e61bec7041455e10ac18c92f3b33ec0760e3..ded5ce42e62a7f4bc8058fd71b5e9e1d4580f49c 100644
+--- a/include/dt-bindings/clock/rockchip,rk3576-cru.h
++++ b/include/dt-bindings/clock/rockchip,rk3576-cru.h
+@@ -594,4 +594,14 @@ 
+ #define SCMI_ARMCLK_B			11
+ #define SCMI_CLK_GPU			456
+ 
++/* IOC-controlled output clocks */
++#define CLK_SAI0_MCLKOUT_TO_IO		571
++#define CLK_SAI1_MCLKOUT_TO_IO		572
++#define CLK_SAI2_MCLKOUT_TO_IO		573
++#define CLK_SAI3_MCLKOUT_TO_IO		574
++#define CLK_SAI4_MCLKOUT_TO_IO		575
++#define CLK_SAI4_MCLKOUT_TO_IO		575
++#define CLK_FSPI0_TO_IO			576
++#define CLK_FSPI1_TO_IO			577
++
+ #endif

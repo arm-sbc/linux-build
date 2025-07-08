@@ -1,0 +1,454 @@
+--- configs/armsbc-rp-a40i_defconfig	1970-01-01 04:00:00.000000000 +0400
++++ configs/armsbc-rp-a40i_defconfig	2025-02-02 09:48:05.152047017 +0400
+@@ -0,0 +1,25 @@
++CONFIG_ARM=y
++CONFIG_ARCH_SUNXI=y
++CONFIG_DEFAULT_DEVICE_TREE="sun8i-a40i-armsbc-rp"
++CONFIG_SPL=y
++CONFIG_MACH_SUN8I_R40=y
++CONFIG_DRAM_CLK=576
++CONFIG_MMC_SUNXI_SLOT_EXTRA=2
++CONFIG_USB1_VBUS_PIN="PB8"
++CONFIG_USB2_VBUS_PIN="PH14"
++# CONFIG_HAS_ARMV7_SECURE_BASE is not set
++CONFIG_AHCI=y
++# CONFIG_SYS_MALLOC_CLEAR_ON_INIT is not set
++CONFIG_SPL_I2C=y
++CONFIG_SCSI_AHCI=y
++CONFIG_SYS_64BIT_LBA=y
++CONFIG_SYS_I2C_MVTWSI=y
++CONFIG_SYS_I2C_SLAVE=0x7f
++CONFIG_SYS_I2C_SPEED=400000
++CONFIG_RGMII=y
++CONFIG_SUN8I_EMAC=y
++CONFIG_AXP_DLDO4_VOLT=2500
++CONFIG_AXP_ELDO3_VOLT=1200
++CONFIG_SCSI=y
++CONFIG_USB_EHCI_HCD=y
++CONFIG_USB_OHCI_HCD=y
+
+--- arch/arm/dts/sun8i-a40i-armsbc-rp.dts	1970-01-01 04:00:00.000000000 +0400
++++ arch/arm/dts/sun8i-a40i-armsbc-rp.dts	2025-02-02 09:35:34.922373151 +0400
+@@ -0,0 +1,361 @@
++/*
++ * Copyright (C) 2024 Subair Mullappilly <msubair@hotmail.com>
++ *
++ * This file is dual-licensed: you can use it either under the terms
++ * of the GPL or the X11 license, at your option. Note that this dual
++ * licensing only applies to this file, and not this project as a
++ * whole.
++ *
++ *  a) This file is free software; you can redistribute it and/or
++ *     modify it under the terms of the GNU General Public License as
++ *     published by the Free Software Foundation; either version 2 of the
++ *     License, or (at your option) any later version.
++ *
++ *     This file is distributed in the hope that it will be useful,
++ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
++ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ *     GNU General Public License for more details.
++ *
++ * Or, alternatively,
++ *
++ *  b) Permission is hereby granted, free of charge, to any person
++ *     obtaining a copy of this software and associated documentation
++ *     files (the "Software"), to deal in the Software without
++ *     restriction, including without limitation the rights to use,
++ *     copy, modify, merge, publish, distribute, sublicense, and/or
++ *     sell copies of the Software, and to permit persons to whom the
++ *     Software is furnished to do so, subject to the following
++ *     conditions:
++ *
++ *     The above copyright notice and this permission notice shall be
++ *     included in all copies or substantial portions of the Software.
++ *
++ *     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
++ *     EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
++ *     OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++ *     NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
++ *     HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
++ *     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
++ *     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
++ *     OTHER DEALINGS IN THE SOFTWARE.
++ */
++
++/dts-v1/;
++#include "sun8i-r40.dtsi"
++#include "sun8i-r40-cpu-opp.dtsi"
++
++#include <dt-bindings/gpio/gpio.h>
++
++/ {
++	model = "ARM-SBC a40i-nano";
++	compatible = "armsbc,a40i-nano", "allwinner,sun8i-r40";
++
++	aliases {
++		ethernet0 = &gmac;
++		serial0 = &uart0;
++	};
++
++	chosen {
++		stdout-path = "serial0:115200n8";
++	};
++
++	connector {
++		compatible = "hdmi-connector";
++		type = "a";
++
++		port {
++			hdmi_con_in: endpoint {
++				remote-endpoint = <&hdmi_out_con>;
++			};
++		};
++	};
++
++	leds {
++		compatible = "gpio-leds";
++
++		pwr-led {
++			label = "armsbc:red:pwr";
++			gpios = <&pio 7 11 GPIO_ACTIVE_HIGH>;
++			default-state = "on";
++		};
++
++ 	};
++
++	reg_vcc5v0: vcc5v0 {
++		compatible = "regulator-fixed";
++		regulator-name = "vcc5v0";
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++		gpio = <&pio 7 26 GPIO_ACTIVE_HIGH>; /* PH26 */
++		enable-active-high;
++	};
++	
++	reg_vcc3v0: vcc3v0 {
++		compatible = "regulator-fixed";
++		regulator-name = "vcc3v0";
++		regulator-min-microvolt = <3000000>;
++		regulator-max-microvolt = <3000000>;
++		gpio = <&pio 7 22 GPIO_ACTIVE_HIGH>; /* PH22 */
++		enable-active-high;
++	};
++	
++	reg_vcc3v3_sd: vcc3v3-sd {
++		compatible = "regulator-fixed";
++		regulator-name = "vcc3v3-sd";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		gpio = <&pio 7 27 GPIO_ACTIVE_HIGH>; /* PH27 */
++		enable-active-high;
++	};
++
++	wifi_pwrseq: pwrseq {
++		compatible = "mmc-pwrseq-simple";
++		reset-gpios = <&pio 6 10 GPIO_ACTIVE_LOW>; /* PG10 WIFI_EN */
++		clocks = <&ccu CLK_OUTA>;
++		clock-names = "ext_clock";
++	};
++};
++
++&cpu0 {
++	cpu-supply = <&reg_dcdc2>;
++};
++
++&codec {
++	allwinner,audio-routing =
++		"Headphone", "HP",
++		"Headphone", "HPCOM",
++		"MIC1", "Mic",
++		"Mic", "MBIAS";
++	allwinner,codec-analog-controls = <&codec_analog>;
++	status = "okay";
++};
++
++&de {
++	status = "okay";
++};
++
++&ehci1 {
++	status = "okay";
++};
++
++&ehci2 {
++	status = "okay";
++};
++
++&gmac {
++	pinctrl-names = "default";
++	pinctrl-0 = <&gmac_rgmii_pins>;
++	phy-handle = <&phy1>;
++	phy-mode = "rgmii-id";
++	phy-supply = <&reg_dc1sw>;
++	status = "okay";
++};
++
++&gmac_mdio {
++	phy1: ethernet-phy@1 {
++		compatible = "ethernet-phy-ieee802.3-c22";
++		reg = <1>;
++	};
++};
++
++&hdmi {
++	status = "okay";
++};
++
++&hdmi_out {
++	hdmi_out_con: endpoint {
++		remote-endpoint = <&hdmi_con_in>;
++	};
++};
++
++&i2c0 {
++	status = "okay";
++
++	axp22x: pmic@34 {
++		compatible = "x-powers,axp221";
++		reg = <0x34>;
++		interrupt-parent = <&nmi_intc>;
++		interrupts = <0 IRQ_TYPE_LEVEL_LOW>;
++	};
++};
++
++#include "axp22x.dtsi"
++
++&mmc0 {
++	vmmc-supply = <&reg_dcdc1>;
++	vqmmc-supply = <&reg_dcdc1>;
++	bus-width = <4>;
++	cd-gpios = <&pio 7 8 GPIO_ACTIVE_LOW>; /* PH8 */
++	status = "okay";
++};
++
++&mmc1 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&mmc1_pg_pins>;
++	vmmc-supply = <&reg_dldo2>;
++	vqmmc-supply = <&reg_dldo1>;
++	mmc-pwrseq = <&wifi_pwrseq>;
++	bus-width = <4>;
++	non-removable;
++	status = "okay";
++	
++	brcmf: wifi@1 {
++		reg = <1>;
++		compatible = "brcm,bcm4329-fmac";
++		interrupt-parent = <&pio>;
++		pinctrl-names = "default";
++		interrupts = <7 0 IRQ_TYPE_LEVEL_LOW>; 
++		interrupt-names = "host-wake";
++	};
++};
++
++&mmc2 {
++	vmmc-supply = <&reg_dcdc1>;
++	vqmmc-supply = <&reg_aldo2>;
++	pinctrl-0 = <&mmc2_pins>;
++	bus-width = <8>;
++	non-removable;
++	status = "okay";
++};
++
++&ohci1 {
++	status = "okay";
++};
++
++&ohci2 {
++	status = "okay";
++};
++
++&pio {
++	pinctrl-names = "default";
++	pinctrl-0 = <&clk_out_a_pin>;
++	vcc-pa-supply = <&reg_dcdc1>;
++	vcc-pc-supply = <&reg_aldo2>;
++	vcc-pd-supply = <&reg_dcdc1>;
++	vcc-pf-supply = <&reg_dldo4>;
++	vcc-pg-supply = <&reg_dldo1>;
++};
++
++&reg_aldo1 {
++	regulator-always-on;
++	regulator-min-microvolt = <3300000>;
++	regulator-max-microvolt = <3300000>;
++	regulator-name = "vcc-3v3-tv-usb";
++};
++
++&reg_aldo2 {
++	regulator-always-on;
++	regulator-min-microvolt = <1800000>;
++	regulator-max-microvolt = <1800000>;
++	regulator-name = "vcc-pa";
++};
++
++&reg_aldo3 {
++	regulator-always-on;
++	regulator-min-microvolt = <3000000>;
++	regulator-max-microvolt = <3000000>;
++	regulator-name = "avcc";
++};
++
++&reg_dcdc1 {
++	regulator-always-on;
++	regulator-min-microvolt = <3300000>;
++	regulator-max-microvolt = <3300000>;
++	regulator-name = "vcc-3v3";
++};
++
++&reg_dcdc2 {
++	regulator-always-on;
++	regulator-min-microvolt = <1100000>;
++	regulator-max-microvolt = <1100000>;
++	regulator-name = "vdd-cpu";
++};
++
++&reg_dcdc3 {
++	regulator-always-on;
++	regulator-min-microvolt = <1100000>;
++	regulator-max-microvolt = <1100000>;
++	regulator-name = "vdd-sys";
++};
++
++&reg_dcdc5 {
++	regulator-always-on;
++	regulator-min-microvolt = <1500000>;
++	regulator-max-microvolt = <1500000>;
++	regulator-name = "vcc-dram";
++};
++
++&reg_dldo1 {
++	regulator-always-on;
++	regulator-min-microvolt = <1800000>;
++	regulator-max-microvolt = <3300000>;
++	regulator-name = "vcc-wifi-io";
++};
++
++&reg_dldo2 {
++	regulator-always-on;
++	regulator-min-microvolt = <3300000>;
++	regulator-max-microvolt = <3300000>;
++	regulator-name = "vcc-wifi";
++};
++
++&reg_dldo3 {
++	regulator-always-on;
++	regulator-min-microvolt = <3300000>;
++	regulator-max-microvolt = <3300000>;
++	regulator-name = "vcc-wifi-2";
++};
++
++&reg_dldo4 {
++	regulator-always-on;
++	regulator-min-microvolt = <2500000>;
++	regulator-max-microvolt = <2500000>;
++	regulator-name = "vdd2v5-sata";
++};
++
++&reg_eldo2 {
++	regulator-min-microvolt = <1200000>;
++	regulator-max-microvolt = <1200000>;
++	regulator-name = "vdd1v2-sata";
++};
++
++&reg_eldo3 {
++	regulator-min-microvolt = <2800000>;
++	regulator-max-microvolt = <2800000>;
++	regulator-name = "vcc-pe";
++};
++
++&tcon_tv0 {
++	status = "okay";
++};
++
++&uart0 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&uart0_pb_pins>;
++	status = "okay";
++};
++
++&uart3 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&uart3_pg_pins>, <&uart3_rts_cts_pg_pins>;
++	uart-has-rtscts;
++	status = "okay";
++
++	bluetooth {
++		compatible = "brcm,bcm43438-bt";
++		clocks = <&ccu CLK_OUTA>;
++		clock-names = "lpo";
++		vbat-supply = <&reg_dldo2>;
++		vddio-supply = <&reg_dldo1>;
++		device-wakeup-gpios = <&pio 7 18 GPIO_ACTIVE_LOW>; /* PH18 */
++		host-wakeup-gpios = <&pio 7 1 GPIO_ACTIVE_HIGH>; /* PH1 */
++		shutdown-gpios = <&pio 6 11 GPIO_ACTIVE_LOW>; /* PG11 */
++		max-speed = <1500000>;
++	};
++};
++
++&usbphy {
++	usb1_vbus-supply = <&reg_vcc5v0>;
++	usb2_vbus-supply = <&reg_vcc5v0>;
++	status = "okay";
++};
+
+--- arch/arm/dts/sun8i-r40.dtsi	2025-02-02 09:38:06.938550658 +0400
++++ arch/arm/dts/sun8i-r40.dtsi	2025-02-02 09:34:06.270253678 +0400
+@@ -75,6 +75,23 @@
+ 			clock-accuracy = <20000>;
+ 			clock-output-names = "ext-osc32k";
+ 		};
++
++		osc24M_32k: clk@1 {
++			#clock-cells = <0>;
++			compatible = "fixed-factor-clock";
++			clock-div = <732>;
++			clock-mult = <1>;
++			clocks = <&osc24M>;
++			clock-output-names = "osc24M_32k";
++		};
++
++		clk_out_a: clk@1c201f0 {
++			#clock-cells = <0>;
++			compatible = "allwinner,sun7i-a20-out-clk";
++			reg = <0x01c201f0 0x4>;
++			clocks = <&osc24M_32k>, <&osc32k>, <&osc24M>;
++			clock-output-names = "clk_out_a";
++		};
+ 	};
+ 
+ 	cpus {
+@@ -640,7 +657,7 @@
+ 				pins = "PG0", "PG1", "PG2",
+ 				       "PG3", "PG4", "PG5";
+ 				function = "mmc1";
+-				drive-strength = <30>;
++				drive-strength = <40>;
+ 				bias-pull-up;
+ 			};
+ 
+@@ -825,6 +842,24 @@
+ 			dma-names = "rx", "tx";
+ 		};
+ 
++		codec: codec@1c22c00 {
++			#sound-dai-cells = <1>;
++			compatible = "allwinner,sun8i-h3-codec";
++			reg = <0x01c22c00 0x300>;
++			interrupts = <GIC_SPI 30 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_CODEC>, <&ccu CLK_CODEC>;
++			clock-names = "apb", "codec";
++			resets = <&ccu RST_BUS_CODEC>;
++			dmas = <&dma 19>, <&dma 19>;
++			dma-names = "rx", "tx";
++			status = "disabled";
++		};
++
++		codec_analog: codec-analog@1c22f00 {
++			compatible = "allwinner,sun8i-a23-codec-analog";
++			reg = <0x01c22f00 0x4>;
++		};
++
+ 		ths: thermal-sensor@1c24c00 {
+ 			compatible = "allwinner,sun8i-r40-ths";
+ 			reg = <0x01c24c00 0x100>;

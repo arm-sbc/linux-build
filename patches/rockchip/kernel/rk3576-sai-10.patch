@@ -1,0 +1,28 @@
+diff --git a/arch/arm64/boot/dts/rockchip/rk3576-armsom-sige5.dts b/arch/arm64/boot/dts/rockchip/rk3576-armsom-sige5.dts
+index 0979d1e0cee7a18a6bcbd08ed19cc835f2186960..de63b053a06c05e02bfcfa03b96e9fc61de8782d 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3576-armsom-sige5.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3576-armsom-sige5.dts
+@@ -269,6 +269,10 @@  hdmi_out_con: endpoint {
+ 	};
+ };
+ 
++&hdmi_sound {
++	status = "okay";
++};
++
+ &hdptxphy {
+ 	status = "okay";
+ };
+@@ -713,6 +717,10 @@  &sai1m0_sdi0
+ 	status = "okay";
+ };
+ 
++&sai6 {
++	status = "okay";
++};
++
+ &sdhci {
+ 	bus-width = <8>;
+ 	full-pwr-cycle-in-suspend;
+
+  

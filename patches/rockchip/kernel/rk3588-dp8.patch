@@ -1,0 +1,40 @@
+diff --git a/include/drm/display/drm_dp_helper.h b/include/drm/display/drm_dp_helper.h
+index abcdef0..1234567 100644
+--- a/include/drm/display/drm_dp_helper.h
++++ b/include/drm/display/drm_dp_helper.h
+@@ int drm_dp_bw_code_to_link_rate(u8 link_bw);
+ 
++int drm_dp_link_power_up(struct drm_dp_aux *aux, u8 dp_rev);
++int drm_dp_link_power_down(struct drm_dp_aux *aux, u8 dp_rev);
++
+ const char *drm_dp_phy_name(enum drm_dp_phy dp_phy);
+
+diff --git a/drivers/gpu/drm/display/drm_dp_helper.c b/drivers/gpu/drm/display/drm_dp_helper.c
+index 7890abc..def1234 100644
+--- a/drivers/gpu/drm/display/drm_dp_helper.c
++++ b/drivers/gpu/drm/display/drm_dp_helper.c
+@@
++int drm_dp_link_power_up(struct drm_dp_aux *aux, u8 dp_rev)
++{
++	u8 val;
++	int ret;
++
++	val = DP_SET_POWER_D0;
++	ret = drm_dp_dpcd_write(aux, DP_SET_POWER, &val, 1);
++	if (ret < 0)
++		return ret;
++
++	msleep(DP_PWR_ON_DELAY);
++
++	return 0;
++}
++
++int drm_dp_link_power_down(struct drm_dp_aux *aux, u8 dp_rev)
++{
++	u8 val;
++
++	val = DP_SET_POWER_D3;
++	return drm_dp_dpcd_write(aux, DP_SET_POWER, &val, 1);
++}
++
+-- 

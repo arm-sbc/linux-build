@@ -4,7 +4,7 @@
 
 # ARM-SBC Linux Build Scripts
 
-This repository contains scripts to automate the process of compiling **U-Boot**, the **Linux kernel**, and generating **bootable SD/eMMC images** for various ARM-SBC boars (SBCs), including Rockchip and Allwinner platforms.
+This repository contains scripts to automate the process of compiling **U-Boot**, the **Linux kernel**, and generating **bootable SD/eMMC images** for various **ARM-SBC boards** (SBCs), including Rockchip and Allwinner platforms.
 
 ---
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-SCRIPT_NAME="set_env.sh"
+SCRIPT_NAME="arm_build.sh"
 BUILD_START_TIME=$(date +%s)
 : "${LOG_FILE:=build.log}"
 touch "$LOG_FILE"
@@ -44,10 +44,18 @@ EOF
 
 load_board_config() {
   local CONFIG_FILE="boards/$CHIP_FAMILY/$BOARD/board_config.sh"
-  if [ -f "$CONFIG_FILE" ]; then
+  if [[ -f "$CONFIG_FILE" ]]; then
+    local TMP_BOARD="$BOARD"  # Save original folder name
     source "$CONFIG_FILE"
-    export CHIP ARCH CROSS_COMPILE UBOOT_DEFCONFIG KERNEL_DEFCONFIG DEVICE_TREE
+
+    if [[ "$BOARD" != "$TMP_BOARD" ]]; then
+      log_internal WARN "board_config.sh redefined BOARD from '$TMP_BOARD' to '$BOARD'. Restoring original folder name."
+      BOARD="$TMP_BOARD"
+    fi
+
+    export BOARD CHIP ARCH CROSS_COMPILE UBOOT_DEFCONFIG KERNEL_DEFCONFIG DEVICE_TREE
     log_internal INFO "Loaded board config from $CONFIG_FILE"
+    log_internal DEBUG "CHIP=$CHIP, ARCH=$ARCH, BOARD=$BOARD, KERNEL_DEFCONFIG=$KERNEL_DEFCONFIG"
   else
     log_internal ERROR "Missing board_config.sh for $BOARD"
     exit 1

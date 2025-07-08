@@ -4,4 +4,4 @@ CROSS_COMPILE="aarch64-linux-gnu-"
 UBOOT_DEFCONFIG="armsbc-kick-rk3588_defconfig"
 KERNEL_DEFCONFIG="armsbc-3588_defconfig"
 DEVICE_TREE="rk3588-armsbc-kick.dts"
-BOARD="armsbc-kick-3588"
+

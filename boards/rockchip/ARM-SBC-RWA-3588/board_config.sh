@@ -4,4 +4,4 @@ CROSS_COMPILE="aarch64-linux-gnu-";
 UBOOT_DEFCONFIG="armsbc-rwa-rk3588_defconfig"; 
 KERNEL_DEFCONFIG="armsbc-3588_defconfig"; 
 DEVICE_TREE="rk3588-armsbc-rwa.dts"
-BOARD="armsbc-rwa-3588"
+

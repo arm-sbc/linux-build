@@ -81,22 +81,26 @@ clean_build_directories() {
 
   log "Build directories cleaned."
 }
-
 prepare_output_directory() {
-  OUTPUT_DIR="$(pwd)/OUT-${BOARD}"  # Use absolute path for output directory
-  export OUTPUT_DIR
-
-  log "Preparing output directory: $OUTPUT_DIR..."
-
-  if [ -d "$OUTPUT_DIR" ]; then
-    log "Cleaning output directory contents..."
-    sudo rm -rf "$OUTPUT_DIR"/* || { log "[ERROR] Failed to clean $OUTPUT_DIR."; exit 1; }
-  else
-    log "Creating output directory: $OUTPUT_DIR..."
-    mkdir -p "$OUTPUT_DIR" || { log "[ERROR] Failed to create $OUTPUT_DIR."; exit 1; }
+  if [[ -z "$BOARD" ]]; then
+    log ERROR "BOARD variable is not set. Cannot create output directory."
+    exit 1
   fi
 
-  log "Output directory is ready."
+  OUTPUT_DIR="$(pwd)/OUT-${BOARD}"  # Use absolute path
+  export OUTPUT_DIR
+
+  log INFO "Preparing output directory: $OUTPUT_DIR..."
+
+  if [[ -d "$OUTPUT_DIR" ]]; then
+    log INFO "Cleaning output directory contents..."
+    sudo rm -rf "$OUTPUT_DIR"/* || { log ERROR "Failed to clean $OUTPUT_DIR."; exit 1; }
+  else
+    log INFO "Creating output directory: $OUTPUT_DIR..."
+    mkdir -p "$OUTPUT_DIR" || { log ERROR "Failed to create $OUTPUT_DIR."; exit 1; }
+  fi
+
+  log SUCCESS "Output directory is ready."
 }
 
 download_uboot_sources() {

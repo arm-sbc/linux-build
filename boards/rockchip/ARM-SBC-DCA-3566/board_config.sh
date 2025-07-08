@@ -4,4 +4,4 @@ CROSS_COMPILE="aarch64-linux-gnu-"
 UBOOT_DEFCONFIG="armsbc-dca-rk3566_defconfig"
 KERNEL_DEFCONFIG="armsbc-3566_defconfig"
 DEVICE_TREE="rk3566-armsbc-dca.dts"
-BOARD="armsbc-dca-3566"
+

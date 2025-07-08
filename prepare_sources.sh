@@ -10,21 +10,25 @@ log() {
   local MESSAGE="$2"
   local TIMESTAMP="[$(date +'%Y-%m-%d %H:%M:%S')]"
   local COLOR RESET
+
   case "$LEVEL" in
-    INFO) COLOR="\033[1;34m" ;;
-    WARN) COLOR="\033[1;33m" ;;
-    ERROR) COLOR="\033[1;31m" ;;
-    DEBUG) COLOR="\033[1;36m" ;;
-    *) COLOR="\033[0m" ;;
+    INFO)   COLOR="\033[1;34m" ;;
+    WARN)   COLOR="\033[1;33m" ;;
+    ERROR)  COLOR="\033[1;31m" ;;
+    DEBUG)  COLOR="\033[1;36m" ;;
+    PROMPT) COLOR="\033[1;32m" ;;
+    *)      COLOR="\033[0m" ;;
   esac
   RESET="\033[0m"
-  echo -e "${COLOR}${TIMESTAMP}[$LEVEL][$SCRIPT_NAME] $MESSAGE${RESET}"
-  echo "${TIMESTAMP}[$LEVEL][$SCRIPT_NAME] $MESSAGE" >> "$LOG_FILE"
-}
 
-error() {
-  log ERROR "$1"
-  exit 1
+  # Only show colors if stdout is a terminal
+  if [ -t 1 ]; then
+    echo -e "${COLOR}${TIMESTAMP}[$LEVEL][$SCRIPT_NAME] $MESSAGE${RESET}"
+  else
+    echo "${TIMESTAMP}[$LEVEL][$SCRIPT_NAME] $MESSAGE"
+  fi
+
+  echo "${TIMESTAMP}[$LEVEL][$SCRIPT_NAME] $MESSAGE" >> "$LOG_FILE"
 }
 
 install_dependencies() {

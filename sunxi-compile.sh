@@ -137,25 +137,17 @@ compile_atf() {
     return
   fi
 
-  # Determine platform name for ATF build
-  if [[ "$CHIP" == a* ]]; then
-    # Allwinner: use PROCESSOR_FAMILY as platform
-    PLATFORM="$PROCESSOR_FAMILY"
-  else
-    # Rockchip or others: use map_chip_to_platform function
-    PLATFORM=$(map_chip_to_platform)
-  fi
+  PLATFORM="$PROCESSOR_FAMILY"  # e.g., sun50i_a64
 
   BL31_PATH="trusted-firmware-a/build/${PLATFORM}/release/bl31.bin"
 
-  # Use prebuilt BL31 if it exists
   if [ -f "$BL31_PATH" ]; then
     log "BL31 already exists at $BL31_PATH. Skipping ATF compilation."
     export BL31="$SCRIPT_DIR/$BL31_PATH"
     return
   fi
 
-  log "Compiling Trusted Firmware for $CHIP (Platform: $PLATFORM)..."
+  log "Compiling Trusted Firmware for $CHIP (PLAT=$PLATFORM)..."
   cd trusted-firmware-a || error "Failed to enter ATF directory."
 
   make CROSS_COMPILE="$CROSS_COMPILE" PLAT="$PLATFORM" DEBUG=0 bl31 -j$(nproc) || error "Trusted Firmware compilation failed."

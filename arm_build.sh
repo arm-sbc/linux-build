@@ -53,9 +53,10 @@ load_board_config() {
       BOARD="$TMP_BOARD"
     fi
 
-    export BOARD CHIP ARCH CROSS_COMPILE UBOOT_DEFCONFIG KERNEL_DEFCONFIG DEVICE_TREE
+    export BOARD CHIP ARCH CROSS_COMPILE UBOOT_DEFCONFIG KERNEL_DEFCONFIG DEVICE_TREE PROCESSOR_FAMILY
     log_internal INFO "Loaded board config from $CONFIG_FILE"
     log_internal DEBUG "CHIP=$CHIP, ARCH=$ARCH, BOARD=$BOARD, KERNEL_DEFCONFIG=$KERNEL_DEFCONFIG"
+    log_internal DEBUG "PROCESSOR_FAMILY=$PROCESSOR_FAMILY"
   else
     log_internal ERROR "Missing board_config.sh for $BOARD"
     exit 1

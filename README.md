@@ -11,6 +11,7 @@ This repository contains scripts to automate the process of compiling **U-Boot**
 ## 🚀 Getting Started
 
 ```bash
+sudo apt install git dialog curl
 git clone https://github.com/arm-sbc/linux-build.git
 cd linux-build
 ./arm_build.sh

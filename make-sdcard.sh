@@ -56,9 +56,9 @@ success() { log_internal PROMPT "$@"; }
 log()     { log_internal INFO "$@"; }  # legacy compatibility
 
 # Detect available board directories
-BOARD_DIRS=(OUT-ARM-SBC-*)
+BOARD_DIRS=(OUT-armsbc-*)
 if [ ${#BOARD_DIRS[@]} -eq 0 ]; then
-  log "ERROR" "No valid board directories found. Ensure your output directories are correctly named as OUT-ARM-SBC-<BOARD>."
+  log "ERROR" "No valid board directories found. Ensure your output directories are correctly named as OUT-armsbc-<BOARD>."
   exit 1
 fi
 

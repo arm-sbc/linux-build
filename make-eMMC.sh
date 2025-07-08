@@ -47,10 +47,10 @@ read -n1 -s
 
 #--- Prompt for OUT_DIR if multiple exist ---#
 if [ -z "$OUT_DIR" ]; then
-  OUT_DIRS=($(find . -maxdepth 1 -type d -name 'OUT-ARM-SBC-*' | sed 's|^\./||'))
+  OUT_DIRS=($(find . -maxdepth 1 -type d -name 'OUT-armsbc-*' | sed 's|^\./||'))
 
   if [ ${#OUT_DIRS[@]} -eq 0 ]; then
-log ERROR "No OUT-ARM-SBC-* directory found.";pause
+log ERROR "No OUT-armsbc-* directory found.";pause
   elif [ ${#OUT_DIRS[@]} -eq 1 ]; then
     OUT_DIR="${OUT_DIRS[0]}"
 log INFO "Auto-selected OUT_DIR: $OUT_DIR"
@@ -67,7 +67,7 @@ fi
 
 #--- Derive BOARD from OUT_DIR ---#
 if [ -z "$BOARD" ]; then
-  BOARD=$(echo "$OUT_DIR" | sed 's/^OUT-ARM-SBC-//')
+  BOARD=$(echo "$OUT_DIR" | sed 's/^OUT-armsbc-//')
 log INFO "Auto-detected BOARD: $BOARD"
 fi
 

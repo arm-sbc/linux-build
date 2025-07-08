@@ -15,6 +15,7 @@ git clone https://github.com/arm-sbc/linux-build.git
 cd linux-build
 chmod +x arm_build.sh
 ./arm_build.sh
+```
 
 The script will guide you through selecting your board, SoC, kernel version, and desired build steps.
 

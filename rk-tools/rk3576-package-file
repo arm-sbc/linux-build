@@ -1,0 +1,8 @@
+# NAME          PATH
+package-file    package-file
+parameter       parameter.txt
+bootloader      rk3576_spl_loader_v1.09.107.bin
+loader1		idbloader.img
+loader2         u-boot.itb
+boot		boot_rk3576.img
+rootfs          rootfs.img

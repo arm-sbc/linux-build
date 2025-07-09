@@ -17,6 +17,8 @@
 		ethernet0 = &emac;
 		serial0 = &uart0;
 		serial1 = &uart1;
+		mmc0 = &mmc0;  // SD card
+        mmc1 = &mmc2;  // eMMC
 	};
 
 	chosen {

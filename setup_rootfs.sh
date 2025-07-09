@@ -231,9 +231,9 @@ else
   exit 1
 fi
 
-# --- Prompt to create Rockchip images ---#
+# --- Prompt to create images based on platform ---#
 echo
-prompt "Do you want to create Rockchip images now?"
+prompt "Do you want to create images now?"
 echo "1. Create SD card image"
 echo "2. Create eMMC image"
 echo "3. Create both"
@@ -241,23 +241,45 @@ echo "4. Skip"
 prompt "Enter your choice (1/2/3/4):"
 read -r IMAGE_OPTION
 
+# Detect platform based on CHIP
+if [[ "$CHIP" == rk* ]]; then
+  PLATFORM="Rockchip"
+elif [[ "$CHIP" == sun* || "$CHIP" == a* ]]; then
+  PLATFORM="Allwinner"
+else
+  PLATFORM="Unknown"
+fi
+log "Detected platform: $PLATFORM"
+
 case $IMAGE_OPTION in
-    1)
-        ./make-sdcard.sh || error "Failed to create SD card image."
-        ;;
-    2)
-        ./make-eMMC.sh || error "Failed to create eMMC image."
-        ;;
-    3)
-        ./make-sdcard.sh || error "Failed to create SD card image."
-        ./make-eMMC.sh || error "Failed to create eMMC image."
-        ;;
-    4)
-        info "Skipping image creation."
-        ;;
-    *)
-        warning "Invalid choice. Skipping image creation."
-        ;;
+  1)
+    ./make-sdcard.sh || error "Failed to create SD card image."
+    ;;
+  2)
+    if [[ "$PLATFORM" == "Rockchip" ]]; then
+      ./make-eMMC.sh || error "Failed to create Rockchip eMMC image."
+    elif [[ "$PLATFORM" == "Allwinner" ]]; then
+      ./make-emmc-sunxi.sh || error "Failed to create Allwinner eMMC image."
+    else
+      warn "Unknown platform. Skipping eMMC creation."
+    fi
+    ;;
+  3)
+    ./make-sdcard.sh || error "Failed to create SD card image."
+    if [[ "$PLATFORM" == "Rockchip" ]]; then
+      ./make-eMMC.sh || error "Failed to create Rockchip eMMC image."
+    elif [[ "$PLATFORM" == "Allwinner" ]]; then
+      ./make-emmc-sunxi.sh || error "Failed to create Allwinner eMMC image."
+    else
+      warn "Unknown platform. Skipping eMMC creation."
+    fi
+    ;;
+  4)
+    info "Skipping image creation."
+    ;;
+  *)
+    warn "Invalid choice. Skipping image creation."
+    ;;
 esac
 
 # --- Build Duration Summary ---

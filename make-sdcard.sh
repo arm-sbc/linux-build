@@ -240,12 +240,12 @@ fi
 # Copy config and System.map
 [ -f "$OUT_DIR/config-$KERNEL_VERSION" ] && cp "$OUT_DIR/config-$KERNEL_VERSION" "$BOOT_DIR/config"
 [ -f "$OUT_DIR/System.map-$KERNEL_VERSION" ] && cp "$OUT_DIR/System.map-$KERNEL_VERSION" "$BOOT_DIR/System.map"
-
-# Generate extlinux.conf dynamically
+# --- Create extlinux.conf dynamically ---
 log "Creating extlinux.conf..."
 EXTLINUX_DIR="$BOOT_DIR/extlinux"
 mkdir -p "$EXTLINUX_DIR"
 
+# Set console and baudrate based on SoC
 case "$CHIP" in
   rk3588|rk3568|rk3399)
     CONSOLE="ttyS2"
@@ -259,18 +259,31 @@ case "$CHIP" in
     CONSOLE="ttyS2"
     BAUD="115200"
     ;;
+  sun8i*|sun50i*|a64|a40i|a83t|a20)
+    CONSOLE="ttyS0"
+    BAUD="115200"
+    ;;
   *)
-    CONSOLE="ttyS2"
-    BAUD="1500000"
+    CONSOLE="ttyS0"
+    BAUD="115200"
     ;;
 esac
+log "Using console: $CONSOLE, baud: $BAUD"
+
+# Set root device based on platform
+if [[ "$CHIP" == rk* ]]; then
+  ROOT_DEV="/dev/mmcblk1p1"  # Rockchip SD card (mmc1 = sdmmc)
+else
+  ROOT_DEV="/dev/mmcblk0p1"  # Allwinner SD card (mmc0 = mmc0)
+fi
+log "Using root device: $ROOT_DEV"
 
 # Generate extlinux.conf
 cat > "$EXTLINUX_DIR/extlinux.conf" <<EOF
-LABEL Linux ARB-SBC
+LABEL Linux ARM-SBC
     KERNEL /boot/$KERNEL_FILE
     FDT /boot/$(basename "$dtb_file")
-    APPEND console=$CONSOLE,$BAUD root=/dev/mmcblk1p1 rw rootwait init=/sbin/init
+    APPEND console=$CONSOLE,$BAUD root=$ROOT_DEV rw rootwait init=/sbin/init
 EOF
 log "extlinux.conf created at $EXTLINUX_DIR"
 

@@ -1,17 +1,49 @@
-#!/bin/bash
-SCRIPT_NAME="postinstall-desktop.sh"
-BUILD_START_TIME=$(date +%s)
-# --- Color Logging ---
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-BLUE='\033[1;34m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
+##!/bin/bash
+set -e
 
-info()    { echo -e "${BLUE}[INFO]${NC} $*"; }
-success() { echo -e "${GREEN}[OK]${NC} $*"; }
-warn()    { echo -e "${YELLOW}[WARN]${NC} $*"; }
-error()   { echo -e "${RED}[ERROR]${NC} $*"; }
+SCRIPT_NAME=$(basename "$0")
+BUILD_START_TIME=$(date +%s)
+: "${LOG_FILE:=build.log}"
+touch "$LOG_FILE"
+
+# --- Unified Logging ---
+log_internal() {
+  local LEVEL="$1"
+  local MESSAGE="$2"
+  local TIMESTAMP="[$(date +'%Y-%m-%d %H:%M:%S')]"
+  local COLOR RESET
+
+  case "$LEVEL" in
+    INFO)    COLOR="\033[1;34m" ;;  # Blue
+    WARN)    COLOR="\033[1;33m" ;;  # Yellow
+    ERROR)   COLOR="\033[1;31m" ;;  # Red
+    DEBUG)   COLOR="\033[1;36m" ;;  # Cyan
+    PROMPT)  COLOR="\033[1;32m" ;;  # Green
+    SUCCESS) COLOR="\033[1;92m" ;;  # Bright Green
+    *)       COLOR="\033[0m"   ;;  # Default
+  esac
+  RESET="\033[0m"
+
+  local SHORT_LINE="[$LEVEL] $MESSAGE"
+  local FULL_LINE="${TIMESTAMP}[$LEVEL][$SCRIPT_NAME] $MESSAGE"
+
+  if [ -t 1 ]; then
+    echo -e "${COLOR}${SHORT_LINE}${RESET}" | tee -a "$LOG_FILE"
+  else
+    echo "$SHORT_LINE" >> "$LOG_FILE"
+  fi
+
+  echo "$FULL_LINE" >> "$LOG_FILE"
+}
+
+# Logging aliases
+info()    { log_internal INFO "$@"; }
+warn()    { log_internal WARN "$@"; }
+error()   { log_internal ERROR "$@"; exit 1; }
+debug()   { log_internal DEBUG "$@"; }
+success() { log_internal SUCCESS "$@"; }
+prompt()  { log_internal PROMPT "$@"; }
+log()     { log_internal INFO "$@"; }  # legacy
 
 # --- Input Variables ---
 ROOTFS_DIR="$1"
@@ -113,9 +145,12 @@ if ! DEBIAN_FRONTEND=noninteractive apt-get install -y $ESSENTIAL_PACKAGES; then
     [[ "$CONT" =~ ^[Nn]$ ]] && exit 1
 fi
 
-# --- 6. Install LXQt Desktop and LightDM ---
-echo "[INFO] Installing LXQt and LightDM..."
-DEBIAN_FRONTEND=noninteractive apt-get install -y lxqt lightdm xinit blueman nm-tray
+# --- 6. Install Minimal LXQt Desktop and LightDM ---
+info "Installing minimal LXQt and LightDM..."
+DEBIAN_FRONTEND=noninteractive apt-get install -y \
+  lxqt-core lxqt-panel lxqt-session openbox lightdm xinit \
+  pcmanfm lxterminal qps lxqt-policykit lxappearance \
+  network-manager-gnome blueman
 
 # --- 7. LightDM autologin ---
 echo "[INFO] Enabling autologin..."
@@ -145,7 +180,6 @@ EOF
 # --- 9. Cleanup ---
 echo "[INFO] Cleaning up..."
 apt purge -y nftables accountsservice || true
-apt autoremove -y --purge || true
 apt clean
 rm -rf /var/lib/apt/lists/*
 '

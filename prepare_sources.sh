@@ -12,23 +12,26 @@ log() {
   local COLOR RESET
 
   case "$LEVEL" in
-    INFO)    COLOR="\033[1;34m" ;;  # Bold blue
-    WARN)    COLOR="\033[1;33m" ;;  # Bold yellow
-    ERROR)   COLOR="\033[1;31m" ;;  # Bold red
-    DEBUG)   COLOR="\033[1;36m" ;;  # Bold cyan
-    PROMPT)  COLOR="\033[1;32m" ;;  # Bold green
-    SUCCESS) COLOR="\033[1;92m" ;;  # Bold bright green
-    *)       COLOR="\033[0m"   ;;  # Reset
+    INFO)    COLOR="\033[1;34m" ;;  # Blue
+    WARN)    COLOR="\033[1;33m" ;;  # Yellow
+    ERROR)   COLOR="\033[1;31m" ;;  # Red
+    DEBUG)   COLOR="\033[1;36m" ;;  # Cyan
+    PROMPT)  COLOR="\033[1;32m" ;;  # Green
+    SUCCESS) COLOR="\033[1;92m" ;;  # Bright green
+    *)       COLOR="\033[0m"   ;;  # Default
   esac
   RESET="\033[0m"
 
+  local LOG_LINE="${TIMESTAMP}[$LEVEL][$SCRIPT_NAME] $MESSAGE"
+  local SHORT_LINE="[$LEVEL] $MESSAGE"
+
   if [ -t 1 ]; then
-    echo -e "${COLOR}${TIMESTAMP}[$LEVEL][$SCRIPT_NAME] $MESSAGE${RESET}"
+    echo -e "${COLOR}${SHORT_LINE}${RESET}"
   else
-    echo "${TIMESTAMP}[$LEVEL][$SCRIPT_NAME] $MESSAGE"
+    echo "$SHORT_LINE"
   fi
 
-  echo "${TIMESTAMP}[$LEVEL][$SCRIPT_NAME] $MESSAGE" >> "$LOG_FILE"
+  echo "$LOG_LINE" >> "$LOG_FILE"
 }
 
 install_dependencies() {

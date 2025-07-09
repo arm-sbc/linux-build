@@ -1,6 +1,7 @@
 #!/bin/bash
+set -e
 
-SCRIPT_NAME="sunxi-compile.sh"
+SCRIPT_NAME=$(basename "$0")
 BUILD_START_TIME=$(date +%s)
 
 # --- Unified Logging Setup ---
@@ -11,24 +12,29 @@ log_internal() {
   local LEVEL="$1"
   local MESSAGE="$2"
   local TIMESTAMP="[$(date +'%Y-%m-%d %H:%M:%S')]"
-  local PREFIX COLOR RESET
+  local COLOR RESET
 
   case "$LEVEL" in
-    INFO)   COLOR="\033[1;34m"; PREFIX="INFO" ;;
-    WARN)   COLOR="\033[1;33m"; PREFIX="WARN" ;;
-    ERROR)  COLOR="\033[1;31m"; PREFIX="ERROR" ;;
-    DEBUG)  COLOR="\033[1;36m"; PREFIX="DEBUG" ;;
-    PROMPT) COLOR="\033[1;32m"; PREFIX="PROMPT" ;;
-    *)      COLOR="\033[0m";   PREFIX="INFO" ;;
+    INFO)    COLOR="\033[1;34m" ;;  # Blue
+    WARN)    COLOR="\033[1;33m" ;;  # Yellow
+    ERROR)   COLOR="\033[1;31m" ;;  # Red
+    DEBUG)   COLOR="\033[1;36m" ;;  # Cyan
+    PROMPT)  COLOR="\033[1;32m" ;;  # Green
+    SUCCESS) COLOR="\033[1;92m" ;;  # Bright Green
+    *)       COLOR="\033[0m"   ;;  # Reset
   esac
   RESET="\033[0m"
-  local LOG_LINE="${TIMESTAMP}[$PREFIX][$SCRIPT_NAME] $MESSAGE"
+
+  local SHORT_LINE="[$LEVEL] $MESSAGE"
+  local FULL_LINE="${TIMESTAMP}[$LEVEL][$SCRIPT_NAME] $MESSAGE"
 
   if [ -t 1 ]; then
-    echo -e "${COLOR}${LOG_LINE}${RESET}" | tee -a "$LOG_FILE"
+    echo -e "${COLOR}${SHORT_LINE}${RESET}" | tee -a "$LOG_FILE"
   else
-    echo "$LOG_LINE" >> "$LOG_FILE"
+    echo "$SHORT_LINE" >> "$LOG_FILE"
   fi
+
+  echo "$FULL_LINE" >> "$LOG_FILE"
 }
 
 # --- Aliases ---
@@ -36,8 +42,8 @@ info()    { log_internal INFO "$@"; }
 warn()    { log_internal WARN "$@"; }
 error()   { log_internal ERROR "$@"; exit 1; }
 debug()   { log_internal DEBUG "$@"; }
-success() { log_internal PROMPT "$@"; }
-log()     { log_internal INFO "$@"; }
+success() { log_internal SUCCESS "$@"; }
+log()     { log_internal INFO "$@"; }  # Legacy
 
 # --- Validate environment ---
 if [ -z "$BOARD" ] || [ -z "$CHIP" ] || [ -z "$UBOOT_DEFCONFIG" ]; then

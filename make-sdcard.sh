@@ -1,20 +1,12 @@
 #!/bin/bash
-BUILD_START_TIME=$(date +%s)
+set -e
+
 SCRIPT_NAME="make-sdcard.sh"
-
-if [ "$EUID" -ne 0 ]; then
-  echo "[INFO][make-sdcard.sh] Re-running script with sudo..."
-  exec sudo "$0" "$@"
-fi
-
-# Function to log messages with colors
-#!/bin/bash
-
 BUILD_START_TIME=$(date +%s)
-SCRIPT_NAME="make-sdcard.sh"
 
+# Re-run with sudo if not root
 if [ "$EUID" -ne 0 ]; then
-  echo "[INFO][${SCRIPT_NAME}] Re-running script with sudo..."
+  echo "[INFO] Re-running script with sudo..."
   exec sudo "$0" "$@"
 fi
 
@@ -26,34 +18,38 @@ log_internal() {
   local LEVEL="$1"
   local MESSAGE="$2"
   local TIMESTAMP="[$(date +'%Y-%m-%d %H:%M:%S')]"
-  local PREFIX COLOR RESET
+  local COLOR RESET
 
   case "$LEVEL" in
-    INFO)   COLOR="\033[1;34m"; PREFIX="INFO" ;;
-    WARN)   COLOR="\033[1;33m"; PREFIX="WARN" ;;
-    ERROR)  COLOR="\033[1;31m"; PREFIX="ERROR" ;;
-    DEBUG)  COLOR="\033[1;36m"; PREFIX="DEBUG" ;;
-    PROMPT) COLOR="\033[1;32m"; PREFIX="PROMPT" ;;
-    *)      COLOR="\033[0m";   PREFIX="INFO" ;;
+    INFO)    COLOR="\033[1;34m" ;;  # Blue
+    WARN)    COLOR="\033[1;33m" ;;  # Yellow
+    ERROR)   COLOR="\033[1;31m" ;;  # Red
+    DEBUG)   COLOR="\033[1;36m" ;;  # Cyan
+    PROMPT)  COLOR="\033[1;32m" ;;  # Green
+    SUCCESS) COLOR="\033[1;92m" ;;  # Bright green
+    *)       COLOR="\033[0m"   ;;  # Default
   esac
   RESET="\033[0m"
 
-  local LOG_LINE="${TIMESTAMP}[$PREFIX][$SCRIPT_NAME] $MESSAGE"
+  local SHORT_LINE="[$LEVEL] $MESSAGE"
+  local FULL_LINE="${TIMESTAMP}[$LEVEL][$SCRIPT_NAME] $MESSAGE"
 
   if [ -t 1 ]; then
-    echo -e "${COLOR}${LOG_LINE}${RESET}" | tee -a "$LOG_FILE"
+    echo -e "${COLOR}${SHORT_LINE}${RESET}" | tee -a "$LOG_FILE"
   else
-    echo "$LOG_LINE" >> "$LOG_FILE"
+    echo "$SHORT_LINE" >> "$LOG_FILE"
   fi
+
+  echo "$FULL_LINE" >> "$LOG_FILE"
 }
 
-# Aliases
+# Logging aliases
 info()    { log_internal INFO "$@"; }
 warn()    { log_internal WARN "$@"; }
 error()   { log_internal ERROR "$@"; exit 1; }
 debug()   { log_internal DEBUG "$@"; }
-success() { log_internal PROMPT "$@"; }
-log()     { log_internal INFO "$@"; }  # legacy compatibility
+success() { log_internal SUCCESS "$@"; }
+log()     { log_internal INFO "$@"; }  # legacy fallback
 
 # Detect available board directories
 BOARD_DIRS=(OUT-ARM-SBC-*)
@@ -112,12 +108,12 @@ log "Platform detected: $PLATFORM"
 
 # Cleanup existing images
 log "Cleaning up existing images in $OUT_DIR..."
-SDCARD_IMAGE="$OUT_DIR/${IMAGE_BASENAME}.img"
+SDCARD_IMAGE="$OUT_DIR/${IMAGE_BASENAME}-sd.img"
 [ -f "$SDCARD_IMAGE" ] && rm -f "$SDCARD_IMAGE"
 
 # Create SD card image
 IMAGE_BASENAME=$(basename "$dtb_file" .dtb)
-IMAGE_NAME="$OUT_DIR/${IMAGE_BASENAME}.img"
+IMAGE_NAME="$OUT_DIR/${IMAGE_BASENAME}-sd.img"
 log "Creating SD card image: $IMAGE_NAME..."
 dd if=/dev/zero of="$IMAGE_NAME" bs=1M count=6144 || { log "ERROR" "Failed to create image file."; exit 1; }
 
@@ -310,7 +306,14 @@ BUILD_DURATION=$((BUILD_END_TIME - BUILD_START_TIME))
 minutes=$((BUILD_DURATION / 60))
 seconds=$((BUILD_DURATION % 60))
 
-success "SD card image created successfully in ${minutes}m ${seconds}s"
+# --- Final Check --- #
+if [ -f "$IMAGE_NAME" ]; then
+  success "SD card image created successfully: $IMAGE_NAME"
+else
+  error "Failed to create SD card image. Check logs above."
+  pause
+fi
+
 debug "Exiting script: $SCRIPT_NAME"
 exit 0
 

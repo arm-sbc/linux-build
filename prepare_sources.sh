@@ -12,16 +12,16 @@ log() {
   local COLOR RESET
 
   case "$LEVEL" in
-    INFO)   COLOR="\033[1;34m" ;;
-    WARN)   COLOR="\033[1;33m" ;;
-    ERROR)  COLOR="\033[1;31m" ;;
-    DEBUG)  COLOR="\033[1;36m" ;;
-    PROMPT) COLOR="\033[1;32m" ;;
-    *)      COLOR="\033[0m" ;;
+    INFO)    COLOR="\033[1;34m" ;;  # Bold blue
+    WARN)    COLOR="\033[1;33m" ;;  # Bold yellow
+    ERROR)   COLOR="\033[1;31m" ;;  # Bold red
+    DEBUG)   COLOR="\033[1;36m" ;;  # Bold cyan
+    PROMPT)  COLOR="\033[1;32m" ;;  # Bold green
+    SUCCESS) COLOR="\033[1;92m" ;;  # Bold bright green
+    *)       COLOR="\033[0m"   ;;  # Reset
   esac
   RESET="\033[0m"
 
-  # Only show colors if stdout is a terminal
   if [ -t 1 ]; then
     echo -e "${COLOR}${TIMESTAMP}[$LEVEL][$SCRIPT_NAME] $MESSAGE${RESET}"
   else
@@ -32,7 +32,7 @@ log() {
 }
 
 install_dependencies() {
-  log "Checking and installing required system dependencies..."
+  log INFO "Checking and installing required system dependencies..."
 
   REQUIRED_PACKAGES=(
     "build-essential" "gcc" "gcc-arm-none-eabi" "make" "swig" "gcc-arm-linux-gnueabihf"
@@ -50,27 +50,27 @@ install_dependencies() {
   done
 
   if [ ${#MISSING_PACKAGES[@]} -gt 0 ]; then
-    log "Installing missing packages: ${MISSING_PACKAGES[*]}"
+    log INFO "Installing missing packages: ${MISSING_PACKAGES[*]}"
     sudo apt update
     sudo apt install -y "${MISSING_PACKAGES[@]}" || {
-      log "[ERROR] Failed to install some packages. Exiting."
+      log INFO "[ERROR] Failed to install some packages. Exiting."
       exit 1
     }
-    log "All required system packages have been installed."
+    log INFO "All required system packages have been installed."
   else
-    log "All required system dependencies are already installed."
+    log INFO "All required system dependencies are already installed."
   fi
 
   # Optionally ensure pipx is installed if you use it elsewhere
   if ! command -v pipx >/dev/null 2>&1; then
-    log "Installing pipx (optional)"
+    log INFO "Installing pipx (optional)"
     sudo apt install -y pipx && pipx ensurepath
   fi
 }
 
 # Function to clean and prepare build directories
 clean_build_directories() {
-  log "Cleaning previous build directories..."
+  log INFO "Cleaning previous build directories..."
 
   # Remove u-boot directory
   [ -d "u-boot" ] && rm -rf "u-boot"
@@ -78,12 +78,12 @@ clean_build_directories() {
   # Find and remove any directory that starts with "linux-"
   for linux_dir in linux-*; do
     if [ -d "$linux_dir" ]; then
-      log "Removing directory: $linux_dir"
+      log INFO "Removing directory: $linux_dir"
       rm -rf "$linux_dir"
     fi
   done
 
-  log "Build directories cleaned."
+  log INFO "Build directories cleaned."
 }
 prepare_output_directory() {
   if [[ -z "$BOARD" ]]; then

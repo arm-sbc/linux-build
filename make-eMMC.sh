@@ -68,7 +68,7 @@ fi
 #--- Derive BOARD from OUT_DIR ---#
 if [ -z "$BOARD" ]; then
   BOARD=$(echo "$OUT_DIR" | sed 's/^OUT-ARM-SBC-//')
-log INFO "Auto-detected BOARD: $BOARD"
+log "Auto-detected BOARD: $BOARD"
 fi
 
 #--- Derive CHIP from DTB ---#
@@ -76,9 +76,9 @@ if [ -z "$CHIP" ]; then
   DTB_PATH=$(find "$OUT_DIR" -name '*.dtb' | head -n1)
   if [ -n "$DTB_PATH" ]; then
     CHIP=$(basename "$DTB_PATH" | cut -d'-' -f1)
-log INFO "Detected CHIP from DTB: $CHIP"
+log "Detected CHIP from DTB: $CHIP"
 else
-log ERROR "Could not auto-detect CHIP. Please set it manually."pause
+log "Could not auto-detect CHIP. Please set it manually."pause
   fi
 fi
 
@@ -93,7 +93,7 @@ if [ -z "$CHIP" ]; then
   DTB_PATH=$(find "$OUT_DIR" -name '*.dtb' | head -n1)
   if [ -n "$DTB_PATH" ]; then
     CHIP=$(basename "$DTB_PATH" | cut -d'-' -f1)
-log INFO "Detected CHIP from DTB: $CHIP"
+log "Detected CHIP from DTB: $CHIP"
 else
 log ERROR "Could not auto-detect CHIP. Please set it manually."pause
   fi
@@ -110,7 +110,7 @@ BOOT_MERGER="rkbin/tools/boot_merger"
 LOADER_BIN="$OUT_DIR/${CHIP}_loader.bin"
 
 if [ ! -f "$LOADER_BIN" ]; then
-log INFO "Loader not found. Attempting to generate using boot_merger..."
+log "Loader not found. Attempting to generate using boot_merger..."
 [ -x "$BOOT_MERGER" ] || chmod +x "$BOOT_MERGER"
   [ -f "$RKBOOT_INI" ] || { echo "[ERROR] Missing RKBOOT ini file: $RKBOOT_INI"; pause; }
 
@@ -144,17 +144,17 @@ log INFO "Loader not found. Attempting to generate using boot_merger..."
 
   cp "$GENERATED_LOADER" "$LOADER_BIN"
   cp "$GENERATED_LOADER" "$OUT_DIR/$(basename "$GENERATED_LOADER")"  # For afptool compatibility
-log INFO "Loader generated and copied to: $LOADER_BIN"
+log "Loader generated and copied to: $LOADER_BIN"
 fi
 
 #--- Validate Inputs ---#
-log INFO "Validating required files..."
+log "Validating required files..."
 [ -f "$PARAMETER_FILE" ] || { echo "[ERROR] parameter file not found: $PARAMETER_FILE"; pause; }
 [ -f "$PACKAGE_FILE" ] || { echo "[ERROR] package file not found: $PACKAGE_FILE"; pause; }
 [ -f "$LOADER_BIN" ] || { echo "[ERROR] Loader binary not found at $LOADER_BIN"; pause; }
 
 #--- Prepare boot directory with kernel, dtb, config, System.map, extlinux.conf ---#
-log INFO "Preparing boot directory..."
+log "Preparing boot directory..."
 BOOT_DIR="$OUT_DIR/boot"
 mkdir -p "$BOOT_DIR"
 
@@ -196,7 +196,7 @@ LABEL Linux ARB-SBC
 EOF
 
 #--- Generate ext2-based boot.img ---#
-log INFO "Creating ext2-based boot.img..."
+log "Creating ext2-based boot.img..."
 BOOT_IMG="$OUT_DIR/boot_${CHIP}.img"
 
 BLOCK_SIZE=4096
@@ -223,26 +223,26 @@ MNT_ROOTFS="$OUT_DIR/mnt_rootfs"
 
 # Fixed size: 5 GB = 5 * 1024 * 1024 KB = 5242880 KB
 FIXED_KB=$((5 * 1024 * 1024))
-log INFO "Creating fixed size 5GB rootfs.img ($(( FIXED_KB / 1024 )) MB).."
+log "Creating fixed size 5GB rootfs.img ($(( FIXED_KB / 1024 )) MB).."
 dd if=/dev/zero of="$ROOTFS_IMG" bs=1K count=$FIXED_KB
 mkfs.ext4 -F "$ROOTFS_IMG"
 
 mkdir -p "$MNT_ROOTFS"
 sudo mount "$ROOTFS_IMG" "$MNT_ROOTFS"
-log INFO "Copying files to rootfs.img..."
+log "Copying files to rootfs.img..."
 sudo rsync -aAX --exclude={"/dev/*","/proc/*","/sys/*","/tmp/*","/run/*"} "$ROOTFS_DIR/" "$MNT_ROOTFS/"
 debug "Contents of rootfs: $(ls -1 "$ROOTFS_DIR" | wc -l) files/folders"
 
 # Copy kernel modules if available
 if [ -d "$OUT_DIR/lib/modules" ]; then
-log INFO "Copying kernel modules..."
+log "Copying kernel modules..."
 sudo mkdir -p "$MNT_ROOTFS/lib/modules"
   sudo cp -a "$OUT_DIR/lib/modules/"* "$MNT_ROOTFS/lib/modules/"
 fi
 
-log INFO "Cloning Armbian firmware repository..."
+log "Cloning Armbian firmware repository..."
 if git clone --depth=1 https://github.com/armbian/firmware.git /tmp/armbian-firmware; then
-  log INFO "Copying firmware into rootfs..."
+  log "Copying firmware into rootfs..."
   sudo mkdir -p "$MNT_ROOTFS/lib/firmware"
   sudo rsync -a --delete /tmp/armbian-firmware/ "$MNT_ROOTFS/lib/firmware/"
   rm -rf /tmp/armbian-firmware
@@ -257,17 +257,17 @@ rmdir "$MNT_ROOTFS"
 log SUCCESS "rootfs.img created at: $ROOTFS_IMG"
 
 #--- Generate raw image with afptool ---#
-log INFO "Copying parameter.txt into OUT_DIR..."
+log "Copying parameter.txt into OUT_DIR..."
 cp "$PARAMETER_FILE" "$OUT_DIR/parameter.txt" || { echo "[ERROR] Failed to copy parameter.txt to $OUT_DIR"; pause; }
-log INFO "Packing raw image using afptool..."
+log "Packing raw image using afptool..."
 $AFPTOOL -pack "$OUT_DIR" "$RAW_IMG" "$PACKAGE_FILE" || pause
 
 #--- Extract RK Tag from MiniLoader for proper RKFW header ---#
 TAG="RK$(hexdump -s 21 -n 4 -e '4 "%c"' "$LOADER_BIN" | rev)"
-log INFO "Using RK Tag: $TAG"
+log "Using RK Tag: $TAG"
 
 #--- Generate final update.img using rkImageMaker ---#
-log INFO "Creating final update.img using rkImageMaker..."
+log "Creating final update.img using rkImageMaker..."
 $RKIMAGEMAKER -$TAG "$LOADER_BIN" "$RAW_IMG" "$OUT_UPDATE_IMG" -os_type:linux || pause
 
 #--- Final Check ---#
@@ -278,7 +278,7 @@ if [ -n "$BUILD_START_TIME" ]; then
   BUILD_DURATION=$((BUILD_END_TIME - BUILD_START_TIME))
   minutes=$((BUILD_DURATION / 60))
   seconds=$((BUILD_DURATION % 60))
-log INFO "Total build time: ${minutes}m ${seconds}s"
+log "Total build time: ${minutes}m ${seconds}s"
 else
 
 log WARN "BUILD_START_TIME not set. Cannot show elapsed time."

@@ -82,7 +82,7 @@ clean_build_directories() {
   for linux_dir in linux-*; do
     if [ -d "$linux_dir" ]; then
       log INFO "Removing directory: $linux_dir"
-      rm -rf "$linux_dir"
+      sudo rm -rf "$linux_dir"
     fi
   done
 

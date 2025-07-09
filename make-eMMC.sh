@@ -42,7 +42,8 @@ warn()    { log_internal WARN "$@"; }
 error()   { log_internal ERROR "$@"; exit 1; }
 debug()   { log_internal DEBUG "$@"; }
 success() { log_internal SUCCESS "$@"; }
-log()     { log_internal INFO "$@"; }  # Legacy fallback
+prompt()  { log_internal PROMPT "$@"; }
+log()     { log_internal INFO "$@"; }  # legacy
 
 # Pause on error
 pause() {
@@ -56,12 +57,13 @@ if [ -z "$OUT_DIR" ]; then
   OUT_DIRS=($(find . -maxdepth 1 -type d -name 'OUT-ARM-SBC-*' | sed 's|^\./||'))
 
   if [ ${#OUT_DIRS[@]} -eq 0 ]; then
-log ERROR "No OUT-armsbc-* directory found.";pause
+    error "No OUT-ARM-SBC-* directory found."
+    pause
   elif [ ${#OUT_DIRS[@]} -eq 1 ]; then
     OUT_DIR="${OUT_DIRS[0]}"
-log INFO "Auto-selected OUT_DIR: $OUT_DIR"
-else
-    echo "[PROMPT] Multiple OUT directories found. Please choose:"
+    info "Auto-selected OUT_DIR: $OUT_DIR"
+  else
+    prompt "Multiple OUT directories found. Please choose:"
     select dir in "${OUT_DIRS[@]}"; do
       if [ -n "$dir" ]; then
         OUT_DIR="$dir"
@@ -79,12 +81,13 @@ fi
 
 #--- Derive CHIP from DTB ---#
 if [ -z "$CHIP" ]; then
-  DTB_PATH=$(find "$OUT_DIR" -name '*.dtb' | head -n1)
+  DTB_PATH=$(find "$OUT_DIR" -name '*.dtb' 2>/dev/null | head -n1)
   if [ -n "$DTB_PATH" ]; then
     CHIP=$(basename "$DTB_PATH" | cut -d'-' -f1)
-log "Detected CHIP from DTB: $CHIP"
-else
-log "Could not auto-detect CHIP. Please set it manually."pause
+    info "Detected CHIP from DTB: $CHIP"
+  else
+    error "Could not auto-detect CHIP. Please set it manually."
+    pause
   fi
 fi
 
@@ -99,9 +102,9 @@ if [ -z "$CHIP" ]; then
   DTB_PATH=$(find "$OUT_DIR" -name '*.dtb' | head -n1)
   if [ -n "$DTB_PATH" ]; then
     CHIP=$(basename "$DTB_PATH" | cut -d'-' -f1)
-log "Detected CHIP from DTB: $CHIP"
+info "Detected CHIP from DTB: $CHIP"
 else
-log ERROR "Could not auto-detect CHIP. Please set it manually."pause
+error "Could not auto-detect CHIP. Please set it manually."pause
   fi
 fi
 
@@ -168,8 +171,8 @@ cp "$OUT_DIR/Image" "$BOOT_DIR/" || pause
 DTB_FILE=$(find "$OUT_DIR" -name "*.dtb" | grep -i "$CHIP" | head -n1)
 [ "$DTB_FILE" != "$BOOT_DIR/$(basename "$DTB_FILE")" ] && cp "$DTB_FILE" "$BOOT_DIR/" || 
 echo "[INFO] Skipping DTB copy to avoid duplication."
-cp "$OUT_DIR"/config-* "$BOOT_DIR/" || true
-cp "$OUT_DIR"/System.map-* "$BOOT_DIR/" || true
+cp "$OUT_DIR"/config-* "$BOOT_DIR/" 2>/dev/null || true
+cp "$OUT_DIR"/System.map-* "$BOOT_DIR/" 2>/dev/null || true
 
 # Generate extlinux.conf
 EXTLINUX_DIR="$BOOT_DIR/extlinux"
@@ -209,7 +212,7 @@ BLOCK_SIZE=4096
 INODES=8192
 
 # Calculate used size in KB and apply 25% safety margin
-USED_KB=$(du -s --block-size=1024 "$BOOT_DIR" | cut -f1)
+USED_KB=$(du -s --block-size=1024 "$BOOT_DIR" 2>/dev/null | cut -f1)
 PADDING_KB=$(( USED_KB / 4 ))
 TOTAL_KB=$(( USED_KB + PADDING_KB ))
 
@@ -222,7 +225,7 @@ BLOCKS=$(( TOTAL_KB * 1024 / BLOCK_SIZE ))
 genext2fs -b "$BLOCKS" -B "$BLOCK_SIZE" -d "$BOOT_DIR" -i "$INODES" -U "$BOOT_IMG" || pause
 
 #--- Create ext4-based rootfs.img from rootfs directory ---#
-log INFO "Creating ext4 rootfs.img from $OUT_DIR/rootfs..."
+log "Creating ext4 rootfs.img from $OUT_DIR/rootfs..."
 ROOTFS_DIR="$OUT_DIR/rootfs"
 ROOTFS_IMG="$OUT_DIR/rootfs.img"
 MNT_ROOTFS="$OUT_DIR/mnt_rootfs"
@@ -236,7 +239,7 @@ mkfs.ext4 -F "$ROOTFS_IMG"
 mkdir -p "$MNT_ROOTFS"
 sudo mount "$ROOTFS_IMG" "$MNT_ROOTFS"
 log "Copying files to rootfs.img..."
-sudo rsync -aAX --exclude={"/dev/*","/proc/*","/sys/*","/tmp/*","/run/*"} "$ROOTFS_DIR/" "$MNT_ROOTFS/"
+sudo rsync -aAX --exclude={"/dev/*","/proc/*","/sys/*","/tmp/*","/run/*"} "$ROOTFS_DIR/" "$MNT_ROOTFS/" 2> >(grep -v "Permission denied" >&2)
 debug "Contents of rootfs: $(ls -1 "$ROOTFS_DIR" | wc -l) files/folders"
 
 # Copy kernel modules if available
@@ -253,14 +256,14 @@ if git clone --depth=1 https://github.com/armbian/firmware.git /tmp/armbian-firm
   sudo rsync -a --delete /tmp/armbian-firmware/ "$MNT_ROOTFS/lib/firmware/"
   rm -rf /tmp/armbian-firmware
 else
-  log WARN "Failed to clone Armbian firmware repository. Skipping firmware copy."
+  warn "Failed to clone Armbian firmware repository. Skipping firmware copy."
 fi
 
 sync
 sudo umount "$MNT_ROOTFS"
 rmdir "$MNT_ROOTFS"
 
-log SUCCESS "rootfs.img created at: $ROOTFS_IMG"
+success "rootfs.img created at: $ROOTFS_IMG"
 
 #--- Generate raw image with afptool ---#
 log "Copying parameter.txt into OUT_DIR..."
@@ -287,7 +290,7 @@ if [ -n "$BUILD_START_TIME" ]; then
 log "Total build time: ${minutes}m ${seconds}s"
 else
 
-log WARN "BUILD_START_TIME not set. Cannot show elapsed time."
+warn "BUILD_START_TIME not set. Cannot show elapsed time."
 fi
 
 exit 0

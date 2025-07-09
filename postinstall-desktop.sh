@@ -1,4 +1,4 @@
-##!/bin/bash
+#!/bin/bash
 set -e
 
 SCRIPT_NAME=$(basename "$0")
@@ -50,6 +50,29 @@ ROOTFS_DIR="$1"
 ARCH="$2"
 QEMU_BIN="$3"
 VERSION="$4"
+cleanup_mounts() {
+  echo "[INFO] Cleaning up mounts..."
+  sudo umount -l "$ROOTFS_DIR/sys" 2>/dev/null || true
+  sudo umount -l "$ROOTFS_DIR/proc" 2>/dev/null || true
+  sudo umount -l "$ROOTFS_DIR/dev" 2>/dev/null || true
+}
+trap cleanup_mounts EXIT INT TERM
+
+# --- Validation ---
+if [ -z "$ROOTFS_DIR" ] || [ -z "$ARCH" ] || [ -z "$QEMU_BIN" ] || [ -z "$VERSION" ]; then
+    error "Usage: $0 <rootfs_dir> <arch> <qemu_bin> <version>"
+    exit 1
+fi
+
+if [ "$ROOTFS_DIR" = "/" ]; then
+    error "Refusing to operate on ROOTFS_DIR=/ — this could destroy your system."
+    exit 1
+fi
+
+if [ ! -f "$QEMU_BIN" ]; then
+    error "QEMU binary not found at $QEMU_BIN"
+    exit 1
+fi
 
 # --- Validation ---
 if [ -z "$ROOTFS_DIR" ] || [ -z "$ARCH" ] || [ -z "$QEMU_BIN" ] || [ -z "$VERSION" ]; then
@@ -146,7 +169,7 @@ if ! DEBIAN_FRONTEND=noninteractive apt-get install -y $ESSENTIAL_PACKAGES; then
 fi
 
 # --- 6. Install Minimal LXQt Desktop and LightDM ---
-info "Installing minimal LXQt and LightDM..."
+echo "[INFO] Installing minimal LXQt and LightDM..."
 DEBIAN_FRONTEND=noninteractive apt-get install -y \
   lxqt-core lxqt-panel lxqt-session openbox lightdm xinit \
   pcmanfm lxterminal qps lxqt-policykit lxappearance \

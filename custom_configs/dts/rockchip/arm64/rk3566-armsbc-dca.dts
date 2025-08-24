@@ -16,8 +16,8 @@
 #include "rk3566.dtsi"
 
 / {
-	model = "ARM SBC DC-A356 Board";
-	compatible = "arm-sbc dca-356", "rockchip,rk3566";
+	model = "ARM SBC DC-A3566 Board";
+	compatible = "arm-sbc dca-3566", "rockchip,rk3566";
 
 	aliases {
 		ethernet0 = &gmac1;
@@ -160,10 +160,6 @@
 	phy-mode = "rmii";
 	clock_in_out = "output";
 	phy-supply = <&vcc_3v3>;
-	snps,reset-gpio = <&gpio4 RK_PC2 GPIO_ACTIVE_LOW>;
-	snps,reset-active-low;
-	/* Reset time is 20ms, 100ms for rtl8211f */
-	snps,reset-delays-us = <0 20000 100000>;
 	assigned-clocks = <&cru SCLK_GMAC1_RX_TX>, <&cru SCLK_GMAC1>, <&cru CLK_MAC1_OUT>;
 	assigned-clock-parents = <&cru SCLK_GMAC1_RMII_SPEED>;
 	assigned-clock-rates = <0>, <50000000>, <25000000>;
@@ -173,12 +169,14 @@
 	status = "okay";
 };
 
-
 &mdio1 {
 	rmii_phy1: ethernet-phy@0 {
 		compatible = "ethernet-phy-ieee802.3-c22";
 		reg = <0x0>;
 		clocks = <&cru CLK_MAC1_OUT>;
+		reset-assert-us = <20000>;
+		reset-deassert-us = <100000>;
+		reset-gpios = <&gpio4 RK_PC2 GPIO_ACTIVE_LOW>;
 	};
 };
 
@@ -240,13 +238,13 @@
 };
 
 &i2s1_8ch {
-	status = "okay";
-	rockchip,clk-trcm = <1>;
 	pinctrl-names = "default";
 	pinctrl-0 = <&i2s1m0_sclktx
 		     &i2s1m0_lrcktx
 		     &i2s1m0_sdi0
 		     &i2s1m0_sdo0>;
+	rockchip,trcm-sync-tx-only;
+	status = "okay";
 };
 
 &i2c0 {
@@ -257,7 +255,7 @@
 		reg = <0x51>;
 		irq-gpios = <&gpio0 RK_PD3 GPIO_ACTIVE_HIGH>;
 		#clock-cells = <0>;
-		clock-output-names = "xin32k";
+		clock-output-names = "hym8563";
 	};
 
 	vdd_cpu: regulator@1c {
@@ -631,6 +629,7 @@
 };
 
 &uart1 {
+	dma-names = "tx", "rx";
 	pinctrl-names = "default";
 	pinctrl-0 = <&uart1m1_rtsn>, <&uart1m1_xfer>, <&uart1m1_ctsn>;
 	status = "okay";

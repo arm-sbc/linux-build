@@ -11,8 +11,8 @@
 #include "rk3568.dtsi"
 
 / {
-	model = "ARM-SBC DCA-568-V06";
-	compatible = "arm-sbc,rk3568-dca568", "rockchip,rk3568";
+	model = "ARM-SBC DCA-3568 Board";
+	compatible = "arm-sbc,dca-3568", "rockchip,rk3568";
 
 	aliases {
 		ethernet0 = &gmac0;
@@ -23,14 +23,7 @@
 	chosen: chosen {
 		stdout-path = "serial2:1500000n8";
 	};
-	
-	gmac0_clkin: external-gmac0-clock {
-		compatible = "fixed-clock";
-		clock-frequency = <50000000>;
-		clock-output-names = "gmac0_clkin";
-		#clock-cells = <0>;
-	};
-	
+		
 	speaker_amp: audio-amplifier {
 		compatible = "simple-audio-amplifier";
 		enable-gpios = <&gpio3 RK_PC5 GPIO_ACTIVE_HIGH>;
@@ -237,7 +230,6 @@
 };
 
 &gmac0 {
-
 	phy-mode = "rmii";
 	clock_in_out = "output";
 	assigned-clocks = <&cru SCLK_GMAC0_RX_TX>, <&cru SCLK_GMAC0>, <&cru CLK_MAC0_OUT>;
@@ -706,6 +698,7 @@
 };
 
 &uart8 {
+	dma-names = "tx", "rx";
 	pinctrl-names = "default";
 	pinctrl-0 = <&uart8m0_rtsn>, <&uart8m0_xfer>, <&uart8m0_ctsn>;
 	status = "okay";

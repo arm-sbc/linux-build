@@ -199,7 +199,7 @@ set_bl31_from_rkbin() {
 
   case "$CHIP" in
     rk3566|rk3568)
-      PATTERN="${TPL_DIR}/${CHIP}_bl31_v*.elf"
+      PATTERN="${TPL_DIR}/rk3568_bl31_v*.elf"
       ;;
     rk3576)
       PATTERN="${TPL_DIR}/rk3576_bl31_v*.elf"

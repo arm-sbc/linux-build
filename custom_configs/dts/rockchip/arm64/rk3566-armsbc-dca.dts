@@ -21,10 +21,8 @@
 
 	aliases {
 		ethernet0 = &gmac1;
-		mmc0 = &sdmmc0;
-		mmc1 = &sdmmc1;
-		mmc2 = &sdhci;
-		mmc3 = &sdmmc2;
+		mmc0 = &sdhci;
+		mmc1 = &sdmmc0;
 		serial1 = &uart6;
 		serial3 = &uart7;
 		serial4 = &uart9;
@@ -35,13 +33,6 @@
 		stdout-path = "serial2:1500000n8";
 	};
 	
-	gmac1_clkin: external-gmac1-clock {
-		compatible = "fixed-clock";
-		clock-frequency = <50000000>;
-		clock-output-names = "gmac1_clkin";
-		#clock-cells = <0>;
-	};
-
 	hdmi-con {
 		compatible = "hdmi-connector";
 		type = "a";
@@ -53,7 +44,7 @@
 		};
 	};
 
-    	rk809-sound {
+    rk809-sound {
 		compatible = "simple-audio-card";
 		simple-audio-card,format = "i2s";
 		simple-audio-card,name = "ROCKCHIP-809-SOUND";
@@ -499,6 +490,7 @@
 		};
 	};
 };
+
 &i2c1 {
 	status = "okay";
 };

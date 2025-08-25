@@ -247,7 +247,7 @@ mkdir -p "$EXTLINUX_DIR"
 
 # Set console and baudrate based on SoC
 case "$CHIP" in
-  rk3588|rk3568|rk3399)
+  rk3588|rk3568|rk3566|rk3399)
     CONSOLE="ttyS2"
     BAUD="1500000"
     ;;

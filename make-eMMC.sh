@@ -179,7 +179,7 @@ EXTLINUX_DIR="$BOOT_DIR/extlinux"
 mkdir -p "$EXTLINUX_DIR"
 
 case "$CHIP" in
-  rk3588|rk3568|rk3399)
+  rk3588|rk3568|rk3566|rk3399)
     CONSOLE="ttyS2"
     BAUD="1500000"
     ;;

@@ -532,9 +532,10 @@
 		reg = <0x51>;
 		irq-gpios = <&gpio0 RK_PD3 GPIO_ACTIVE_HIGH>;
 		#clock-cells = <0>;
-		clock-output-names = "xin32k";
+		clock-output-names = "hym8563";
 	};
 };
+
 &i2s0_8ch {
 	/* hdmi sound */
 	status = "okay";

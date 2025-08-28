@@ -16,7 +16,7 @@
 #include "rk3566.dtsi"
 
 / {
-	model = "ARM SBC DC-A3566 Board";
+	model = "ARM-SBC DCA-3566 Board";
 	compatible = "arm-sbc dca-3566", "rockchip,rk3566";
 
 	aliases {
@@ -31,6 +31,30 @@
 
 	chosen: chosen {
 		stdout-path = "serial2:1500000n8";
+	};
+	
+	leds: leds {
+		compatible = "gpio-leds";
+		
+		work_led: work {
+			gpios = <&gpio0 RK_PB7 GPIO_ACTIVE_HIGH>;
+			linux,default-trigger = "heartbeat";
+			};
+				
+		 led_work: led-work {
+		 	gpios = <&gpio3 RK_PC5 GPIO_ACTIVE_HIGH>; //speak audio
+		 	default-state = "on";
+		 	};
+		 	
+         gpio_fan: gpio-fan {
+         	gpios = <&gpio4 RK_PD2 GPIO_ACTIVE_HIGH>; //4G_model
+         	
+         	};
+         	
+         gpio_pwen: gpio-pwen {
+         	gpios = <&gpio0 RK_PC5 GPIO_ACTIVE_HIGH>; //gpio0 21
+         	default-state = "on";
+			};
 	};
 	
 	hdmi-con {
@@ -71,7 +95,6 @@
 		post-power-on-delay-ms = <100>;
 		power-off-delay-us = <5000000>;
 	};
-
 
 	vcc12v0_dcin: regulator-vcc12v0-dcin {
 		compatible = "regulator-fixed";
@@ -148,16 +171,16 @@
 };
 
 &gmac1 {
-	phy-mode = "rmii";
-	clock_in_out = "output";
-	phy-supply = <&vcc_3v3>;
-	assigned-clocks = <&cru SCLK_GMAC1_RX_TX>, <&cru SCLK_GMAC1>, <&cru CLK_MAC1_OUT>;
-	assigned-clock-parents = <&cru SCLK_GMAC1_RMII_SPEED>;
-	assigned-clock-rates = <0>, <50000000>, <25000000>;
-	pinctrl-names = "default";
-	pinctrl-0 = <&gmac1m0_miim &gmac1m0_clkinout &gmac1m0_rx_bus2 &gmac1m0_tx_bus2 &gmac1m0_rx_er &eth1m0_pins>;
-	phy-handle = <&rmii_phy1>;
-	status = "okay";
+		phy-mode = "rmii";
+		clock_in_out = "output";
+		phy-supply = <&vcc_3v3>;
+		assigned-clocks = <&cru SCLK_GMAC1_RX_TX>, <&cru SCLK_GMAC1>, <&cru CLK_MAC1_OUT>;
+		assigned-clock-parents = <&cru SCLK_GMAC1_RMII_SPEED>;
+		assigned-clock-rates = <0>, <50000000>, <25000000>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&gmac1m0_miim &gmac1m0_clkinout &gmac1m0_rx_bus2 &gmac1m0_tx_bus2 &gmac1m0_rx_er &eth1m0_pins>;
+		phy-handle = <&rmii_phy1>;
+		status = "okay";
 };
 
 &mdio1 {
@@ -168,6 +191,8 @@
 		reset-assert-us = <20000>;
 		reset-deassert-us = <100000>;
 		reset-gpios = <&gpio4 RK_PC2 GPIO_ACTIVE_LOW>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&eth_phy_rstn>;
 	};
 };
 
@@ -248,24 +273,23 @@
 		#clock-cells = <0>;
 		clock-output-names = "hym8563";
 	};
-
-	vdd_cpu: regulator@1c {
-		compatible = "tcs,tcs4525";
-		reg = <0x1c>;
+	
+	vdd_cpu: regulator@40 {
+		compatible = "silergy,syr827";
+		reg = <0x40>;
 		fcs,suspend-voltage-selector = <1>;
 		regulator-name = "vdd_cpu";
-		regulator-min-microvolt = <800000>;
-		regulator-max-microvolt = <1150000>;
-		regulator-ramp-delay = <2300>;
 		regulator-always-on;
 		regulator-boot-on;
-		vin-supply = <&vcc5v0_sys>;
+		regulator-min-microvolt = <830000>;
+		regulator-max-microvolt = <1200000>;
+		regulator-ramp-delay = <2300>;
+		vin-supply = <&vcc3v3_sys>;
 
 		regulator-state-mem {
 			regulator-off-in-suspend;
 		};
 	};
-
 
 	rk809: pmic@20 {
 		compatible = "rockchip,rk809";
